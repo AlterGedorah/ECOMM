@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
 vendor/
-
+.gitignore
 # Environment files
 .env
 .env.local

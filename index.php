@@ -25,7 +25,6 @@
                         fill="#003932" />
                 </svg>
             </a>
-            <!-- Logo -->
             <ul class="links">
                 <li><a href="/ECOMM" aria-current="page">Home</a></li>
                 <li><a href="/product">Product</a></li>
