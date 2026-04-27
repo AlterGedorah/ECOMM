@@ -1,0 +1,194 @@
+@import url(style.css);
+
+/* Navbar */
+.navBar {
+    width: 100%;
+    min-height: 70px;
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 0.75rem 1.5rem;
+    background: var(--primaryColor);
+    box-shadow: 0px 8px 4px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+
+}
+
+/* Logo link */
+.logo-link {
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+    transition: opacity 0.2s ease;
+}
+
+.logo-link:hover,
+.logo-link:focus {
+    opacity: 0.8;
+}
+
+.logo-link:focus-visible {
+    outline: 3px solid var(--focusOutline);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Navigation links */
+.links {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem;
+    list-style-type: none;
+}
+
+.links a {
+    text-decoration: none;
+    color: var(--textColor);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 0.5rem 0.25rem;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+}
+
+/* Hover state */
+.links a:hover {
+    border-bottom-color: var(--textColor);
+    opacity: 0.9;
+}
+
+/* Focus state for keyboard navigation */
+.links a:focus-visible {
+    outline: 3px solid var(--focusOutline);
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
+/* Active/current page indicator */
+.links a[aria-current="page"] {
+    border-bottom-color: var(--textColor);
+    font-weight: 600;
+}
+
+/* Search  */
+.search {
+    flex: 1;
+    display: flex;
+    justify-content: left;
+    margin: 0 1rem;
+}
+
+.search-wrapper {
+    display: grid;
+    align-items: center;
+    width: 100%;
+}
+
+.search-wrapper input {
+    grid-area: 1/1;
+    width: 100%;
+    padding: 0.5rem 3rem 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    outline: none;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.search-wrapper input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(56, 81, 68, 0.2);
+}
+
+.search-btn {
+    grid-area: 1/1;
+    justify-self: end;
+    margin-right: 4px;
+    background-color: var(--accent-color);
+    color: var(--bg-color);
+    border: none;
+    padding: 0.35rem 1rem;
+    border-radius: 20px; 
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+
+/* Adjust SVG size when text is present */
+.search-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+
+.search-btn:hover {
+    background-color: var(--highlight-color);
+    transform: scale(1.02);
+}
+
+.search-btn:active {
+    transform: scale(0.98);
+}
+
+.search-btn:focus-visible {
+    outline: 2px solid var(--highlight-color);
+    outline-offset: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .navBar {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .links {
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .links a {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* For very small screens */
+@media (max-width: 400px) {
+    .links {
+        gap: 0.5rem;
+    }
+    
+    .links a {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.5rem;
+    }
+}
+
+/* Mobile: Hide text, show only icon */
+@media (max-width: 600px) {
+    
+    .search-wrapper input {
+        padding-right: 2.5rem;
+    }
+    
+    .search-btn {
+        padding: 0.35rem 0.75rem;
+    }
+}
