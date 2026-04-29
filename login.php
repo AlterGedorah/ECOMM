@@ -1,15 +1,37 @@
 <?php
 session_start();
-if(isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit();
-}
+require_once 'config/Database.php';
 
 $error = null;
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    require_once 'controllers/AuthController.php';
-    $auth = new AuthController();
-    $error = $auth->login();
+    $email = $_POST['email'];
+    $password = $_POST['password']; // Plain text
+    
+    $database = new Database();
+    $conn = $database->getConnection();
+    
+    // Direct comparison - NO password_verify
+    $stmt = $conn->prepare("SELECT id, name, email, role FROM users WHERE email = ? AND password = ?");
+    $stmt->bind_param("ss", $email, $password);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows == 1) {
+        $user = $result->fetch_assoc();
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_name'] = $user['name'];
+        $_SESSION['user_role'] = $user['role'];
+        
+        if($user['role'] == 'admin') {
+            header("Location: admin_dashboard.php");
+        } else {
+            header("Location: index.php");
+        }
+        exit();
+    } else {
+        $error = "Invalid email or password!";
+    }
 }
 ?>
 

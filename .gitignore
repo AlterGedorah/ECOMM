@@ -5,7 +5,7 @@ vendor/
 # Environment files
 .env
 .env.local
-
+uploads/*
 # IDE files
 .vscode/    
 .idea/

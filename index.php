@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'controllers/ProductController.php';
+require_once __DIR__ . '/controllers/ProductController.php';
 
 $productController = new ProductController();
 $data = $productController->index();
@@ -55,13 +55,19 @@ $products = $data['products'];
                 <!-- Search and icons - Right side -->
                 <div class="col d-flex justify-content-end align-items-center">
                     <!-- Search form -->
-                    <form class="d-flex me-4" action="search.php" method="GET">
+                    <form class="d-flex me-5" action="search.php" method="GET">
                         <div class="position-relative">
-                            <input class="form-control rounded-5 py-2 ps-4 pe-5" type="search" name="q"
+                            <input class="form-control rounded-5 py-2 ps-4 pe-8" type="search" name="q"
                                 placeholder="Search products..." style="width: 250px;">
                             <button class="btn position-absolute top-0 end-0 h-100" type="submit"
-                                style="background: none; border: none;">
-                                🔍
+                                style="background: none; border: none; padding-right:15px;">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M15.813 14.8711L11.8369 10.8951C12.9205 9.56987 13.4532 7.87893 13.325 6.17197C13.1967 4.46502 12.4173 2.87267 11.1479 1.72427C9.87853 0.575873 8.21631 -0.0406994 6.50509 0.00208668C4.79386 0.0448727 3.16454 0.743743 1.95414 1.95414C0.743743 3.16454 0.0448727 4.79386 0.00208668 6.50509C-0.0406994 8.21631 0.575873 9.87853 1.72427 11.1479C2.87267 12.4173 4.46502 13.1967 6.17197 13.325C7.87893 13.4532 9.56987 12.9205 10.8951 11.8369L14.8711 15.813C14.9968 15.9344 15.165 16.0015 15.3397 16C15.5143 15.9985 15.6814 15.9284 15.8049 15.8049C15.9284 15.6814 15.9985 15.5143 16 15.3397C16.0015 15.165 15.9344 14.9968 15.813 14.8711ZM6.68251 12.0115C5.62855 12.0115 4.59825 11.6989 3.72191 11.1134C2.84556 10.5278 2.16254 9.69556 1.7592 8.72182C1.35587 7.74808 1.25034 6.6766 1.45595 5.64289C1.66157 4.60917 2.16911 3.65964 2.91437 2.91437C3.65964 2.16911 4.60917 1.66157 5.64289 1.45595C6.6766 1.25034 7.74808 1.35587 8.72182 1.7592C9.69556 2.16254 10.5278 2.84556 11.1134 3.72191C11.6989 4.59825 12.0115 5.62855 12.0115 6.68251C12.0099 8.09535 11.4479 9.44987 10.4489 10.4489C9.44987 11.4479 8.09535 12.0099 6.68251 12.0115Z"
+                                        fill="black" />
+                                </svg>
+
                             </button>
                         </div>
                     </form>
@@ -246,19 +252,34 @@ $products = $data['products'];
                         <div class="card rounded-5 overflow-hidden h-100">
                             <div style="height: 300px; background-image: url('<?= $product['image_url'] ?? 'placeholder.jpg' ?>'); background-size: cover; background-position: center; cursor: pointer;"
                                 data-bs-toggle="modal" data-bs-target="#productModal" data-id="<?= $product['id'] ?>"
-                                data-name="<?= htmlspecialchars($product['name']) ?>" data-price-min="<?= $product['price'] ?>"
+                                data-name="<?= htmlspecialchars($product['name']) ?>" data-price="<?= $product['price'] ?>"
+                                data-quantity="<?= $product['quantity'] ?>"
                                 data-image="<?= $product['image_url'] ?? 'placeholder.jpg' ?>">
                             </div>
                             <div class="p-4" style="background-color: #F6F3F0;">
                                 <div class="h4"><?= htmlspecialchars($product['name']) ?></div>
                                 <div class="text-secondary">₱<?= number_format($product['price'], 2) ?></div>
-                                <button class="mt-3 p-2 rounded-5 btn btn-outline-success w-100 buy-btn" data-bs-toggle="modal"
-                                    data-bs-target="#productModal" data-id="<?= $product['id'] ?>"
-                                    data-name="<?= htmlspecialchars($product['name']) ?>"
-                                    data-price-min="<?= $product['price_min'] ?>" data-price-max="<?= $product['price_max'] ?>"
-                                    data-image="<?= $product['image_url'] ?? 'placeholder.jpg' ?>">
-                                    BUY
-                                </button>
+
+                                <!-- Stock indicator -->
+                                <?php if ($product['quantity'] > 0): ?>
+                                    <div class="text-success small mt-1">✓ In Stock (<?= $product['quantity'] ?> available)</div>
+                                <?php else: ?>
+                                    <div class="text-danger small mt-1">✗ Out of Stock</div>
+                                <?php endif; ?>
+
+                                <?php if ($product['quantity'] > 0): ?>
+                                    <button class="mt-3 p-2 rounded-5 btn btn-outline-success w-100 buy-btn" data-bs-toggle="modal"
+                                        data-bs-target="#productModal" data-id="<?= $product['id'] ?>"
+                                        data-name="<?= htmlspecialchars($product['name']) ?>" data-price="<?= $product['price'] ?>"
+                                        data-quantity="<?= $product['quantity'] ?>"
+                                        data-image="<?= $product['image_url'] ?? 'placeholder.jpg' ?>">
+                                        BUY
+                                    </button>
+                                <?php else: ?>
+                                    <button class="mt-3 p-2 rounded-5 btn btn-secondary w-100" disabled>
+                                        OUT OF STOCK
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -280,16 +301,21 @@ $products = $data['products'];
                         <div class="col-md-6 p-4">
                             <h3 id="modalName" class="mb-2"></h3>
                             <p class="text-secondary mb-3" id="modalPrice"></p>
+
+                            <!-- Stock info in modal -->
+                            <div id="modalStock" class="mb-2"></div>
+
                             <p class="mb-2">Fresh from local farms. Quality guaranteed.</p>
 
                             <form method="POST" action="add_to_cart.php" id="addToCartForm">
                                 <input type="hidden" name="product_id" id="modalProductId">
                                 <div class="mb-3">
                                     <label class="form-label">Quantity:</label>
-                                    <input type="number" name="quantity" value="1" min="1" max="99" class="form-control"
-                                        style="width: 100px;">
+                                    <input type="number" name="quantity" id="modalQuantity" value="1" min="1" max="99"
+                                        class="form-control" style="width: 100px;">
                                 </div>
-                                <button type="submit" class="btn btn-success w-100 py-2 rounded-5">
+                                <button type="submit" id="modalAddToCartBtn"
+                                    class="btn btn-success w-100 py-2 rounded-5">
                                     Add to Cart
                                 </button>
                             </form>
@@ -303,7 +329,7 @@ $products = $data['products'];
             </div>
         </div>
     </div>
-    
+
     <!-- Bottom Banner -->
     <div class="mb-5 mt-5 px-5">
         <div class="card shadow-lg mx-5 p-3 rounded-5 d-flex flex-row justify-content-around">
@@ -444,51 +470,60 @@ $products = $data['products'];
         <div class="ms-5">Terms</div>
         <div class="ms-5">Conditions</div>
     </div>
+    <!-- JavaScript to populate modal -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js">
         // Populate modal when opened
         document.querySelectorAll('[data-bs-toggle="modal"]').forEach(element => {
             element.addEventListener('click', function () {
                 const id = this.getAttribute('data-id');
                 const name = this.getAttribute('data-name');
-                const priceMin = this.getAttribute('data-price-min');
-                const priceMax = this.getAttribute('data-price-max');
+                const price = this.getAttribute('data-price');
+                const quantity = parseInt(this.getAttribute('data-quantity'));
                 const image = this.getAttribute('data-image');
 
+                // Set modal values
                 document.getElementById('modalProductId').value = id;
                 document.getElementById('modalName').innerText = name;
-                document.getElementById('modalPrice').innerHTML = `₱${parseFloat(priceMin).toFixed(2)} - ₱${parseFloat(priceMax).toFixed(2)}`;
+                document.getElementById('modalPrice').innerHTML = `₱${parseFloat(price).toFixed(2)}`;
                 document.getElementById('modalImage').src = image;
-            });
-        });
 
-        // AJAX form submission (optional - updates cart count without reload)
-        document.getElementById('addToCartForm')?.addEventListener('submit', function (e) {
-            e.preventDefault();
+                // Set quantity input max based on stock
+                const qtyInput = document.getElementById('modalQuantity');
+                qtyInput.max = quantity;
+                qtyInput.value = 1;
 
-            fetch(this.action + '&ajax=1', {
-                method: 'POST',
-                body: new FormData(this),
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Update cart count in navbar
-                        const cartBadge = document.querySelector('.cart-count');
-                        if (cartBadge) cartBadge.innerText = data.cart_count;
+                // Show stock status in modal
+                const stockDiv = document.getElementById('modalStock');
+                const addToCartBtn = document.getElementById('modalAddToCartBtn');
 
-                        // Close modal
-                        bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
-
-                        // Show toast
-                        alert('Added to cart!');
+                if (quantity > 0) {
+                    if (quantity < 10) {
+                        stockDiv.innerHTML = `<div class="text-warning small">⚠️ Only ${quantity} left in stock!</div>`;
+                    } else {
+                        stockDiv.innerHTML = `<div class="text-success small">✓ ${quantity} items available</div>`;
                     }
-                })
-                .catch(error => {
-                    // Fallback to normal form submit
-                    this.submit();
+                    addToCartBtn.disabled = false;
+                    addToCartBtn.classList.remove('btn-secondary');
+                    addToCartBtn.classList.add('btn-success');
+                } else {
+                    stockDiv.innerHTML = `<div class="text-danger small">✗ Out of stock!</div>`;
+                    addToCartBtn.disabled = true;
+                    addToCartBtn.classList.remove('btn-success');
+                    addToCartBtn.classList.add('btn-secondary');
+                }
+
+                // Validate quantity doesn't exceed stock
+                qtyInput.addEventListener('change', function () {
+                    if (this.value > quantity) {
+                        this.value = quantity;
+                        alert(`Only ${quantity} items available!`);
+                    }
+                    if (this.value < 1) {
+                        this.value = 1;
+                    }
                 });
+            });
         });
     </script>
 
-</html>
+</html> 

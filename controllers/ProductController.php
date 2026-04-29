@@ -1,5 +1,5 @@
 <?php
-require_once 'models/Product.php';
+require_once __DIR__ . '/../models/Product.php';
 
 class ProductController {
     private $product;
@@ -33,19 +33,22 @@ class ProductController {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $this->product->name = $_POST['name'];
             $this->product->category = $_POST['category'];
-            $this->product->price_min = $_POST['price_min'];
-            $this->product->price_max = $_POST['price_max'];
+            $this->product->price = $_POST['price'];
+            $this->product->quantity = $_POST['quantity'];
             
-            // Handle image upload
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 $this->product->image_url = $this->product->uploadImage($_FILES['image']);
+            } else {
+                $this->product->image_url = '';
             }
             
             if ($this->product->create()) {
-                header("Location: admin_dashboard.php?success=Product created");
+                $_SESSION['flash'] = ['type' => 'success', 'message' => '✅ Product created successfully!'];
             } else {
-                header("Location: admin_dashboard.php?error=Failed to create");
+                $_SESSION['flash'] = ['type' => 'danger', 'message' => '❌ Failed to create product'];
             }
+            
+            header("Location: /ECOMM/admin_dashboard.php");
             exit();
         }
     }
@@ -53,23 +56,29 @@ class ProductController {
     public function update() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $this->product->id = $_POST['id'];
-            $this->product->read($this->product->id);
             
             $this->product->name = $_POST['name'];
             $this->product->category = $_POST['category'];
-            $this->product->price_min = $_POST['price_min'];
-            $this->product->price_max = $_POST['price_max'];
+            $this->product->price = $_POST['price'];
+            $this->product->quantity = $_POST['quantity'];
             
-            // Handle new image
+            // Only update image if new one uploaded
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 $this->product->image_url = $this->product->uploadImage($_FILES['image']);
+            } else {
+                // Keep existing image
+                $current = new Product();
+                $current->read($this->product->id);
+                $this->product->image_url = $current->image_url;
             }
             
             if ($this->product->update()) {
-                header("Location: admin_dashboard.php?success=Product updated");
+                $_SESSION['flash'] = ['type' => 'success', 'message' => '✏️ Product updated successfully!'];
             } else {
-                header("Location: admin_dashboard.php?error=Failed to update");
+                $_SESSION['flash'] = ['type' => 'danger', 'message' => '❌ Failed to update product'];
             }
+            
+            header("Location: /ECOMM/admin_dashboard.php");
             exit();
         }
     }
@@ -79,10 +88,12 @@ class ProductController {
             $this->product->id = $_POST['id'];
             
             if ($this->product->delete()) {
-                header("Location: admin_dashboard.php?success=Product deleted");
+                $_SESSION['flash'] = ['type' => 'success', 'message' => '🗑️ Product deleted successfully!'];
             } else {
-                header("Location: admin_dashboard.php?error=Failed to delete");
+                $_SESSION['flash'] = ['type' => 'danger', 'message' => '❌ Failed to delete product'];
             }
+            
+            header("Location: /ECOMM/admin_dashboard.php");
             exit();
         }
     }
