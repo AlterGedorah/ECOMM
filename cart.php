@@ -7,19 +7,80 @@ require_once 'models/Product.php';
 $cart = new Cart();
 $product_model = new Product();
 
+// Process checkout
+if (isset($_POST['checkout'])) {
+    $cart_items = $cart->getItems();
+    $all_in_stock = true;
+    $out_of_stock_items = [];
+    
+    // Check all items have sufficient stock
+    foreach ($cart_items as $id => $qty) {
+        $product_model->read($id);
+        if ($product_model->quantity < $qty) {
+            $all_in_stock = false;
+            $out_of_stock_items[] = $product_model->name . " (only {$product_model->quantity} left, you ordered $qty)";
+        }
+    }
+    
+    if ($all_in_stock) {
+        // Deduct stock for all items
+        foreach ($cart_items as $id => $qty) {
+            $product_model->read($id);
+            $new_quantity = $product_model->quantity - $qty;
+            $product_model->updateQuantity($id, $new_quantity);
+        }
+        
+        // Clear cart
+        $cart->clear();
+        $_SESSION['success'] = "Order placed successfully! Thank you for shopping.";
+        header("Location: cart.php");
+        exit();
+    } else {
+        $_SESSION['error'] = "Insufficient stock: " . implode(", ", $out_of_stock_items);
+        header("Location: cart.php");
+        exit();
+    }
+}
+
+// Handle cart updates
+if (isset($_POST['update_cart'])) {
+    $product_id = $_POST['product_id'];
+    $new_qty = (int)$_POST['quantity'];
+    
+    $product_model->read($product_id);
+    if ($new_qty <= $product_model->quantity) {
+        $cart->update($product_id, $new_qty);
+        $_SESSION['success'] = "Cart updated!";
+    } else {
+        $_SESSION['error'] = "Only {$product_model->quantity} items available for {$product_model->name}!";
+    }
+    header("Location: cart.php");
+    exit();
+}
+
+if (isset($_POST['remove_item'])) {
+    $cart->remove($_POST['product_id']);
+    $_SESSION['success'] = "Item removed from cart!";
+    header("Location: cart.php");
+    exit();
+}
+
 // Get cart data with stock info
 $cart_items = $cart->getItems();
 $cart_data = [];
 $total = 0;
+$has_insufficient = false;
 
 foreach ($cart_items as $id => $qty) {
     if ($product_model->read($id)) {
-        // Check if enough stock
         $stock_status = ($product_model->quantity >= $qty) ? 'sufficient' : 'insufficient';
-
+        if ($stock_status == 'insufficient') {
+            $has_insufficient = true;
+        }
+        
         $subtotal = $product_model->price * $qty;
         $total += $subtotal;
-
+        
         $cart_data[] = [
             'id' => $id,
             'name' => $product_model->name,
@@ -32,69 +93,14 @@ foreach ($cart_items as $id => $qty) {
         ];
     }
 }
-
-// Handle cart updates
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['update_cart'])) {
-        $product_id = $_POST['product_id'];
-        $new_qty = $_POST['quantity'];
-
-        // Check stock before updating
-        $product_model->read($product_id);
-        if ($new_qty <= $product_model->quantity) {
-            $cart->update($product_id, $new_qty);
-            header("Location: cart.php");
-            exit();
-        } else {
-            $error = "Only {$product_model->quantity} items available for {$product_model->name}!";
-        }
-    }
-
-    if (isset($_POST['remove_item'])) {
-        $cart->remove($_POST['product_id']);
-        header("Location: cart.php");
-        exit();
-    }
-
-    if (isset($_POST['checkout'])) {
-        // Check all items have sufficient stock
-        $all_in_stock = true;
-        $out_of_stock_items = [];
-
-        foreach ($cart_items as $id => $qty) {
-            $product_model->read($id);
-            if ($product_model->quantity < $qty) {
-                $all_in_stock = false;
-                $out_of_stock_items[] = $product_model->name . " (only {$product_model->quantity} left)";
-            }
-        }
-
-        if ($all_in_stock) {
-            // Deduct stock for all items
-            foreach ($cart_items as $id => $qty) {
-                $product_model->read($id);
-                $new_stock = $product_model->quantity - $qty;
-                $product_model->updateQuantity($id, $new_stock);
-            }
-            $cart->clear();
-            $success = "Order placed successfully! Thank you for shopping.";
-        } else {
-            $error = "Insufficient stock: " . implode(", ", $out_of_stock_items);
-        }
-    }
-}
-
-$cart_count = count($cart_items);
 ?>
 
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>Your Cart - R3 Farm</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-
 <body>
     <div class="container mt-5 pt-5">
         <nav class="fixed-top p-3 shadow-lg px-4" style="background-color: #385144;">
@@ -213,18 +219,20 @@ $cart_count = count($cart_items);
             <a href="index.php" class="btn btn-outline-success">← Continue Shopping</a>
         </div>
 
-        <?php if (isset($success)): ?>
+        <?php if (isset($_SESSION['success'])): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <?= $success ?>
+                <?= $_SESSION['success'] ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
+            <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
 
-        <?php if (isset($error)): ?>
+        <?php if (isset($_SESSION['error'])): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <?= $error ?>
+                <?= $_SESSION['error'] ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
+            <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
         <?php if (empty($cart_data)): ?>
@@ -247,31 +255,28 @@ $cart_count = count($cart_items);
                                     <div class="card-body">
                                         <h5 class="card-title"><?= htmlspecialchars($item['name']) ?></h5>
                                         <p class="card-text">₱<?= number_format($item['price'], 2) ?> each</p>
-
+                                        
                                         <!-- Stock warning -->
                                         <?php if ($item['stock_status'] == 'insufficient'): ?>
                                             <div class="text-danger small mb-2">
-                                                ⚠️ Only <?= $item['stock'] ?> items available in stock!
+                                                ⚠️ Only <?= $item['stock'] ?> items available in stock! (You have <?= $item['quantity'] ?>)
                                             </div>
                                         <?php endif; ?>
-
+                                        
                                         <div class="d-flex align-items-center">
                                             <form method="POST" class="me-2">
                                                 <input type="hidden" name="product_id" value="<?= $item['id'] ?>">
-                                                <input type="number" name="quantity" value="<?= $item['quantity'] ?>" min="1"
-                                                    max="<?= $item['stock'] ?>" class="form-control"
+                                                <input type="number" name="quantity" value="<?= $item['quantity'] ?>" 
+                                                    min="1" max="<?= $item['stock'] ?>" class="form-control" 
                                                     style="width: 80px; display: inline-block;">
-                                                <button type="submit" name="update_cart"
-                                                    class="btn btn-sm btn-info">Update</button>
+                                                <button type="submit" name="update_cart" class="btn btn-sm btn-info">Update</button>
                                             </form>
                                             <form method="POST">
                                                 <input type="hidden" name="product_id" value="<?= $item['id'] ?>">
-                                                <button type="submit" name="remove_item"
-                                                    class="btn btn-sm btn-danger">Remove</button>
+                                                <button type="submit" name="remove_item" class="btn btn-sm btn-danger">Remove</button>
                                             </form>
                                         </div>
-                                        <p class="mt-2"><strong>Subtotal: ₱<?= number_format($item['subtotal'], 2) ?></strong>
-                                        </p>
+                                        <p class="mt-2"><strong>Subtotal: ₱<?= number_format($item['subtotal'], 2) ?></strong></p>
                                     </div>
                                 </div>
                             </div>
@@ -289,27 +294,17 @@ $cart_count = count($cart_items);
                             <p>Total Quantity: <?= array_sum(array_column($cart_data, 'quantity')) ?></p>
                             <hr>
                             <h5>Total: ₱<?= number_format($total, 2) ?></h5>
-
-                            <?php
-                            $has_insufficient = false;
-                            foreach ($cart_data as $item) {
-                                if ($item['stock_status'] == 'insufficient') {
-                                    $has_insufficient = true;
-                                    break;
-                                }
-                            }
-                            ?>
-
+                            
                             <?php if ($has_insufficient): ?>
                                 <div class="alert alert-warning mt-3 small">
-                                    ⚠️ Some items have insufficient stock. Please update quantities.
+                                    ⚠️ Some items have insufficient stock. Please update quantities before checking out.
                                 </div>
                                 <button class="btn btn-secondary w-100 mt-3" disabled>
                                     Checkout Unavailable
                                 </button>
                             <?php else: ?>
                                 <form method="POST">
-                                    <button type="submit" name="checkout" class="btn btn-success w-100 mt-3"
+                                    <button type="submit" name="checkout" class="btn btn-success w-100 mt-3" 
                                         onclick="return confirm('Confirm your order? Stock will be deducted.')">
                                         Proceed to Checkout
                                     </button>
@@ -324,5 +319,4 @@ $cart_count = count($cart_items);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
