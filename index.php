@@ -471,7 +471,8 @@ $products = $data['products'];
         <div class="ms-5">Conditions</div>
     </div>
     <!-- JavaScript to populate modal -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
         // Populate modal when opened
         document.querySelectorAll('[data-bs-toggle="modal"]').forEach(element => {
             element.addEventListener('click', function () {
@@ -479,51 +480,73 @@ $products = $data['products'];
                 const name = this.getAttribute('data-name');
                 const price = this.getAttribute('data-price');
                 const quantity = parseInt(this.getAttribute('data-quantity'));
-                const image = this.getAttribute('data-image');
+                let image = this.getAttribute('data-image');
+
+                // Fix image path - add ./ if needed or use default
+                if (!image || image === '' || image === 'null') {
+                    image = '/ECOMM/placeholder.jpg';
+                }
+
+                // Debug - check what image path is
+                console.log('Loading image:', image);
 
                 // Set modal values
                 document.getElementById('modalProductId').value = id;
                 document.getElementById('modalName').innerText = name;
                 document.getElementById('modalPrice').innerHTML = `₱${parseFloat(price).toFixed(2)}`;
-                document.getElementById('modalImage').src = image;
+
+                // Handle image loading with error fallback
+                const modalImg = document.getElementById('modalImage');
+                modalImg.src = image;
+                modalImg.onerror = function () {
+                    console.warn('Image failed to load:', image);
+                    this.src = '/ECOMM/placeholder.jpg';
+                };
 
                 // Set quantity input max based on stock
                 const qtyInput = document.getElementById('modalQuantity');
-                qtyInput.max = quantity;
-                qtyInput.value = 1;
+                if (qtyInput) {
+                    qtyInput.max = quantity;
+                    qtyInput.value = 1;
+
+                    // Remove old listener to avoid duplicates
+                    const newQtyInput = qtyInput.cloneNode(true);
+                    qtyInput.parentNode.replaceChild(newQtyInput, qtyInput);
+
+                    newQtyInput.addEventListener('change', function () {
+                        if (this.value > quantity) {
+                            this.value = quantity;
+                            alert(`Only ${quantity} items available!`);
+                        }
+                        if (this.value < 1) {
+                            this.value = 1;
+                        }
+                    });
+                }
 
                 // Show stock status in modal
                 const stockDiv = document.getElementById('modalStock');
                 const addToCartBtn = document.getElementById('modalAddToCartBtn');
 
-                if (quantity > 0) {
-                    if (quantity < 10) {
-                        stockDiv.innerHTML = `<div class="text-warning small">⚠️ Only ${quantity} left in stock!</div>`;
+                if (stockDiv && addToCartBtn) {
+                    if (quantity > 0) {
+                        if (quantity < 10) {
+                            stockDiv.innerHTML = `<div class="text-warning small">⚠️ Only ${quantity} left in stock!</div>`;
+                        } else {
+                            stockDiv.innerHTML = `<div class="text-success small">✓ ${quantity} items available</div>`;
+                        }
+                        addToCartBtn.disabled = false;
+                        addToCartBtn.classList.remove('btn-secondary');
+                        addToCartBtn.classList.add('btn-success');
                     } else {
-                        stockDiv.innerHTML = `<div class="text-success small">✓ ${quantity} items available</div>`;
+                        stockDiv.innerHTML = `<div class="text-danger small">✗ Out of stock!</div>`;
+                        addToCartBtn.disabled = true;
+                        addToCartBtn.classList.remove('btn-success');
+                        addToCartBtn.classList.add('btn-secondary');
                     }
-                    addToCartBtn.disabled = false;
-                    addToCartBtn.classList.remove('btn-secondary');
-                    addToCartBtn.classList.add('btn-success');
-                } else {
-                    stockDiv.innerHTML = `<div class="text-danger small">✗ Out of stock!</div>`;
-                    addToCartBtn.disabled = true;
-                    addToCartBtn.classList.remove('btn-success');
-                    addToCartBtn.classList.add('btn-secondary');
                 }
-
-                // Validate quantity doesn't exceed stock
-                qtyInput.addEventListener('change', function () {
-                    if (this.value > quantity) {
-                        this.value = quantity;
-                        alert(`Only ${quantity} items available!`);
-                    }
-                    if (this.value < 1) {
-                        this.value = 1;
-                    }
-                });
             });
         });
     </script>
 
-</html> 
+</html>
