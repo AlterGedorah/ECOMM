@@ -1,25 +1,28 @@
 <?php
 require_once __DIR__ . '/../models/User.php';
 
-class AuthController {
+class AuthController
+{
     private $user;
-    
-    public function __construct() {
+
+    public function __construct()
+    {
         $this->user = new User();
     }
-    
-    public function register() {
+
+    public function register()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $this->user->name = $_POST['name'];
             $this->user->email = $_POST['email'];
             $this->user->password = $_POST['password'];
-            
+
             if ($this->user->register()) {
                 $_SESSION['user_id'] = $this->user->id;
                 $_SESSION['user_name'] = $this->user->name;
                 $_SESSION['user_role'] = $this->user->role;
-                
-                header("Location: ../index.php");
+
+                header("Location: /ECOMM/index.php");
                 exit();
             } else {
                 return "Email already exists!";
@@ -27,21 +30,22 @@ class AuthController {
         }
         return null;
     }
-    
-    public function login() {
+
+    public function login()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $this->user->email = $_POST['email'];
             $this->user->password = $_POST['password'];
-            
+
             if ($this->user->login()) {
                 $_SESSION['user_id'] = $this->user->id;
                 $_SESSION['user_name'] = $this->user->name;
                 $_SESSION['user_role'] = $this->user->role;
-                
-                if($this->user->role == 'admin') {
-                    header("Location: ../admin_dashboard.php");
+
+                if ($this->user->role == 'admin') {
+                    header("Location: /ECOMM/admin_dashboard.php");
                 } else {
-                    header("Location: ../index.php");
+                    header("Location: /ECOMM/index.php");
                 }
                 exit();
             } else {
@@ -50,18 +54,21 @@ class AuthController {
         }
         return null;
     }
-    
-    public function logout() {
+
+    public function logout()
+    {
         session_destroy();
-        header("Location: ../index.php"); // ← CHANGED THIS LINE
+        header("Location: /ECOMM/index.php");
         exit();
     }
-    
-    public function isLoggedIn() {
+
+    public function isLoggedIn()
+    {
         return isset($_SESSION['user_id']);
     }
-    
-    public function isAdmin() {
+
+    public function isAdmin()
+    {
         return isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'admin';
     }
 }

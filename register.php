@@ -1,7 +1,7 @@
 <?php
 session_start();
 if(isset($_SESSION['user_id'])) {
-    header("Location: index.php");
+    header("Location: /ECOMM/index.php");
     exit();
 }
 
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <div class="alert alert-danger"><?= $error ?></div>
                         <?php endif; ?>
                         
-                        <form method="POST">
+                        <form method="POST" action="/ECOMM/register.php">
                             <div class="mb-3">
                                 <label>Full Name</label>
                                 <input type="text" name="name" class="form-control" required>
