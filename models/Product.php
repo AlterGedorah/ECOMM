@@ -18,14 +18,12 @@ class Product {
         $this->conn = $database->getConnection();
     }
     
-    // CREATE product
     public function create() {
         $stmt = $this->conn->prepare("INSERT INTO {$this->table} (name, category, price, quantity, image_url) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("ssdis", $this->name, $this->category, $this->price, $this->quantity, $this->image_url);
         return $stmt->execute();
     }
     
-    // READ product
     public function read($id) {
         $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE id = ?");
         $stmt->bind_param("i", $id);
@@ -46,50 +44,41 @@ class Product {
         return false;
     }
     
-    // UPDATE product
     public function update() {
         $stmt = $this->conn->prepare("UPDATE {$this->table} SET name = ?, category = ?, price = ?, quantity = ?, image_url = ? WHERE id = ?");
         $stmt->bind_param("ssdiss", $this->name, $this->category, $this->price, $this->quantity, $this->image_url, $this->id);
         return $stmt->execute();
     }
     
-    // DELETE product - ADD THIS METHOD
     public function delete() {
-        // First get image path to delete file
-        $this->read($this->id);
-        
         // Delete image file if exists
+        $this->read($this->id);
         if ($this->image_url && file_exists($this->image_url)) {
             unlink($this->image_url);
         }
         
-        // Delete from database
         $stmt = $this->conn->prepare("DELETE FROM {$this->table} WHERE id = ?");
         $stmt->bind_param("i", $this->id);
         return $stmt->execute();
     }
     
-    // UPDATE quantity only
     public function updateQuantity($id, $quantity) {
         $stmt = $this->conn->prepare("UPDATE {$this->table} SET quantity = ? WHERE id = ?");
         $stmt->bind_param("ii", $quantity, $id);
         return $stmt->execute();
     }
     
-    // CHECK stock availability
     public function hasStock($id, $requested_qty) {
         $this->read($id);
         return $this->quantity >= $requested_qty;
     }
     
-    // DEDUCT stock after purchase
     public function deductStock($id, $quantity) {
         $this->read($id);
         $new_quantity = $this->quantity - $quantity;
         return $this->updateQuantity($id, $new_quantity);
     }
     
-    // GET products by category (with limit)
     public function getByCategory($category, $limit = 4) {
         $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE category = ? ORDER BY created_at DESC LIMIT ?");
         $stmt->bind_param("si", $category, $limit);
@@ -103,7 +92,6 @@ class Product {
         return $products;
     }
     
-    // GET all products
     public function getAll() {
         $result = $this->conn->query("SELECT * FROM {$this->table} ORDER BY created_at DESC");
         $products = [];
@@ -113,7 +101,7 @@ class Product {
         return $products;
     }
     
-    // UPLOAD product image
+    // Enhanced uploadImage with resize functionality
     public function uploadImage($file) {
         $target_dir = "uploads/";
         
@@ -121,18 +109,50 @@ class Product {
             mkdir($target_dir, 0777, true);
         }
         
-        $image_name = time() . "_" . basename($file["name"]);
-        $target_file = $target_dir . $image_name;
+        // Read image file
+        $image_data = file_get_contents($file["tmp_name"]);
         
-        $check = getimagesize($file["tmp_name"]);
-        if ($check === false) {
+        // Create image resource from string
+        $source = imagecreatefromstring($image_data);
+        
+        if (!$source) {
             return false;
         }
         
-        if (move_uploaded_file($file["tmp_name"], $target_file)) {
-            return $target_file;
-        }
-        return false;
+        // Get original dimensions
+        $width = imagesx($source);
+        $height = imagesy($source);
+        
+        // Create thumbnail (300x300)
+        $thumb_size = 300;
+        $thumbnail = imagecreatetruecolor($thumb_size, $thumb_size);
+        
+        // Calculate resize ratio
+        $ratio = $thumb_size / max($width, $height);
+        $new_width = $width * $ratio;
+        $new_height = $height * $ratio;
+        $x_offset = ($thumb_size - $new_width) / 2;
+        $y_offset = ($thumb_size - $new_height) / 2;
+        
+        // Fill background with white
+        $white = imagecolorallocate($thumbnail, 255, 255, 255);
+        imagefill($thumbnail, 0, 0, $white);
+        
+        // Resize and copy image
+        imagecopyresampled($thumbnail, $source, $x_offset, $y_offset, 0, 0, 
+                          $new_width, $new_height, $width, $height);
+        
+        // Generate unique filename
+        $image_name = time() . "_" . basename($file["name"]);
+        $target_file = $target_dir . $image_name;
+        
+        // Save as JPEG
+        imagejpeg($thumbnail, $target_file, 80);
+        
+        // Clean up memory
+        unset($source, $thumbnail);
+        
+        return $target_file;
     }
 }
 ?>
