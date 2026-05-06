@@ -1,5 +1,5 @@
 <?php
-session_start();
+
 require_once 'controllers/AuthController.php';
 require_once 'controllers/ProductController.php';
 

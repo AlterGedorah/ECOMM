@@ -43,9 +43,9 @@ class ProductController {
             }
             
             if ($this->product->create()) {
-                $_SESSION['flash'] = ['type' => 'success', 'message' => '✅ Product created successfully!'];
+                $_SESSION['flash'] = ['type' => 'success', 'message' => 'Product created successfully!'];
             } else {
-                $_SESSION['flash'] = ['type' => 'danger', 'message' => '❌ Failed to create product'];
+                $_SESSION['flash'] = ['type' => 'danger', 'message' => ' Failed to create product'];
             }
             
             header("Location: /ECOMM/admin_dashboard.php");
@@ -73,9 +73,9 @@ class ProductController {
             }
             
             if ($this->product->update()) {
-                $_SESSION['flash'] = ['type' => 'success', 'message' => '✏️ Product updated successfully!'];
+                $_SESSION['flash'] = ['type' => 'success', 'message' => 'Product updated successfully!'];
             } else {
-                $_SESSION['flash'] = ['type' => 'danger', 'message' => '❌ Failed to update product'];
+                $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Failed to update product'];
             }
             
             header("Location: /ECOMM/admin_dashboard.php");
@@ -88,9 +88,9 @@ class ProductController {
             $this->product->id = $_POST['id'];
             
             if ($this->product->delete()) {
-                $_SESSION['flash'] = ['type' => 'success', 'message' => '🗑️ Product deleted successfully!'];
+                $_SESSION['flash'] = ['type' => 'success', 'message' => 'Product deleted successfully!'];
             } else {
-                $_SESSION['flash'] = ['type' => 'danger', 'message' => '❌ Failed to delete product'];
+                $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Failed to delete product'];
             }
             
             header("Location: /ECOMM/admin_dashboard.php");

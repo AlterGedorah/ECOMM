@@ -9,7 +9,16 @@ class AuthController
     {
         $this->user = new User();
     }
-
+    public function user() {
+    if (isset($_COOKIE['user_id'])) {
+        return [
+            'id' => $_COOKIE['user_id'],
+            'name' => $_COOKIE['user_name'],
+            'role' => $_COOKIE['user_role']
+        ];
+    }
+    return null;
+}
     public function register()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -18,9 +27,9 @@ class AuthController
             $this->user->password = $_POST['password'];
 
             if ($this->user->register()) {
-                $_SESSION['user_id'] = $this->user->id;
-                $_SESSION['user_name'] = $this->user->name;
-                $_SESSION['user_role'] = $this->user->role;
+                setcookie("user_id", $this->user->id, time() + 60, "/");
+                setcookie("user_name", $this->user->name, time() + 60, "/");
+                setcookie("user_role", $this->user->role, time() + 60, "/");
 
                 header("Location: /ECOMM/index.php");
                 exit();
@@ -38,9 +47,9 @@ class AuthController
             $this->user->password = $_POST['password'];
 
             if ($this->user->login()) {
-                $_SESSION['user_id'] = $this->user->id;
-                $_SESSION['user_name'] = $this->user->name;
-                $_SESSION['user_role'] = $this->user->role;
+                setcookie("user_id", $this->user->id, time() + 60, "/"); // 1 hour
+                setcookie("user_name", $this->user->name, time() + 60, "/");
+                setcookie("user_role", $this->user->role, time() + 60, "/");
 
                 if ($this->user->role == 'admin') {
                     header("Location: /ECOMM/admin_dashboard.php");
@@ -64,12 +73,12 @@ class AuthController
 
     public function isLoggedIn()
     {
-        return isset($_SESSION['user_id']);
+        return isset($_COOKIE['user_id']);
     }
 
     public function isAdmin()
     {
-        return isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'admin';
+        return isset($_COOKIE['user_role']) && $_COOKIE['user_role'] === 'admin';
     }
 }
 ?>

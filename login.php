@@ -24,9 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($result->num_rows == 1) {
             $user = $result->fetch_assoc();
 
-
+    
             if (strcmp($password, $user['password']) == 0) {
-                setcookie("user_id", $user['id'], time() + 60, "/"); // 1 hour
+                setcookie("user_id", $user['id'], time() + 60, "/");
                 setcookie("user_name", $user['name'], time() + 60, "/");
                 setcookie("user_role", $user['role'], time() + 60, "/");
 
