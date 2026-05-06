@@ -270,47 +270,82 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
         </div>
     <?php endforeach; ?>
 
-    <!-- Product Modal -->
+    <!-- Refined Product Modal -->
     <div class="modal fade" id="productModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4">
-                <div class="modal-body p-0">
-                    <div class="row g-0">
-                        <div class="col-md-6">
-                            <img src="" id="modalImage" class="img-fluid rounded-start"
-                                style="height: 100%; width: 100%; object-fit: cover;">
-                        </div>
-                        <div class="col-md-6 p-4">
-                            <h3 id="modalName" class="mb-2"></h3>
-                            <p class="text-secondary mb-3" id="modalPrice"></p>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden; background-color: #f5f2ee;">
+            <!-- Close button -->
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="z-index:10;"></button>
 
-                            <!-- Stock info in modal -->
-                            <div id="modalStock" class="mb-2"></div>
+            <!-- Top section: image + purchase panel -->
+            <div class="modal-body p-0">
+                <div class="row g-0">
+                    <!-- Product Image -->
+                    <div class="col-md-6 d-flex align-items-center justify-content-center p-4" style="background-color: #f5f2ee;">
+                        <img src="" id="modalImage" class="img-fluid"
+                            style="max-height: 280px; object-fit: contain; border-radius: 16px;">
+                    </div>
 
-                            <p class="mb-2">Fresh from local farms. Quality guaranteed.</p>
+                    <!-- Right Panel -->
+                    <div class="col-md-6 p-4 d-flex flex-column justify-content-center">
+                        <h2 id="modalName" class="fw-bold text-uppercase mb-3" style="letter-spacing: 1px;"></h2>
+
+                        <!-- Purchase Box -->
+                        <div class="border rounded-4 p-4 bg-white shadow-sm">
+                            <!-- Price -->
+                            <p class="fw-semibold mb-3" id="modalPrice" style="font-size: 1.1rem;"></p>
+
+                            <!-- Stock info -->
+                            <div id="modalStock" class="mb-3"></div>
 
                             <form method="POST" action="add_to_cart.php" id="addToCartForm">
                                 <input type="hidden" name="product_id" id="modalProductId">
+
+                                <!-- Quantity -->
                                 <div class="mb-3">
-                                    <label class="form-label">Quantity:</label>
-                                    <input type="number" name="quantity" id="modalQuantity" value="1" min="1" max="99"
-                                        class="form-control" style="width: 100px;">
+                                    <div class="d-flex justify-content-between align-items-center border rounded-pill px-4 py-2 bg-white" style="cursor:pointer;">
+                                        <label class="form-label mb-0 fw-medium" style="font-size:0.95rem;">Add quantity</label>
+                                        <input type="number" name="quantity" id="modalQuantity" value="1" min="1" max="99"
+                                            class="border-0 text-end fw-semibold"
+                                            style="width: 60px; outline:none; background:transparent; font-size:0.95rem;">
+                                    </div>
                                 </div>
+
+                                <!-- Purchase Button -->
                                 <button type="submit" id="modalAddToCartBtn"
-                                    class="btn btn-success w-100 py-2 rounded-5">
-                                    Add to Cart
+                                    class="btn w-100 py-3 fw-bold rounded-pill text-white"
+                                    style="background-color: #1a5c2a; font-size: 1rem; letter-spacing: 0.5px;">
+                                    Purchase
                                 </button>
                             </form>
-
-                            <button class="btn btn-outline-secondary w-100 mt-2 rounded-5" data-bs-dismiss="modal">
-                                Continue Shopping
-                            </button>
                         </div>
                     </div>
+                </div>
+
+                <!-- Bottom section: Your preferences -->
+                <div class="border-top px-4 py-4" style="background-color: #f5f2ee;">
+                    <h5 class="fw-bold mb-3">Your preferences</h5>
+                    <label class="form-label fw-semibold mb-2">Special Instruction</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="text" id="modalNote" class="form-control rounded-pill"
+                            placeholder="I would like to..."
+                            style="max-width: 360px; background: white; border: 1px solid #ccc;">
+                    </div>
+                    <div class="mt-2 d-flex gap-2">
+                        <button class="btn btn-secondary rounded-pill px-4 py-1" onclick="document.getElementById('modalNote').value=''">Cancel</button>
+                        <button class="btn rounded-pill px-4 py-1 text-white fw-semibold" style="background-color: #1a5c2a;">Save</button>
+                    </div>
+                </div>
+
+                <!-- Disclaimer -->
+                <div class="border-top px-4 py-3" style="background-color: #f5f2ee; font-size: 0.75rem; color: #666;">
+                    Product information or packaging displayed may not be current or complete. Always refer to the physical product for the most accurate information.
+                    <br><em>*Actual weight may vary based on seasonality and other factors. Estimated price is approximate and provided only for reference.</em>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
     <!-- Bottom Banner -->
     <div class="mb-5 mt-5 px-5">
