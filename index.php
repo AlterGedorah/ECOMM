@@ -2,11 +2,13 @@
 session_start();
 require_once __DIR__ . '/controllers/ProductController.php';
 
+
 $productController = new ProductController();
 $data = $productController->index();
 $categories = $data['categories'];
 $products = $data['products'];
 $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -75,10 +77,10 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                             </svg>
                         </a>
                         <ul class="dropdown-menu">
-                            <?php if (isset($_SESSION['user_id'])): ?>
+                            <?php if (isset($_COOKIE['user_id'])): ?>
                                 <li><a class="dropdown-item" href="profile.php">My Profile</a></li>
                                 <li><a class="dropdown-item" href="orders.php">My Orders</a></li>
-                                <?php if (($_SESSION['user_role'] ?? null) === 'admin'): ?>
+                                <?php if (($_COOKIE['user_role'] ?? null) === 'admin'): ?>
                                     <li><a class="dropdown-item" href="admin_dashboard.php">Admin Panel</a></li>
                                 <?php endif; ?>
                                 <li>
