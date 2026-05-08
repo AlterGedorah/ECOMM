@@ -1,5 +1,6 @@
 <?php
-session_start();
+session_set_cookie_params(0);
+session_start();    
 require_once 'models/Cart.php';
 require_once 'models/Product.php';
 
@@ -76,7 +77,7 @@ foreach ($cart_items as $id => $qty) {
         $stock_status = ($product_model->quantity >= $qty) ? 'sufficient' : 'insufficient';
         if ($stock_status == 'insufficient') {
             $has_insufficient = true;
-        }
+        }   
 
         $subtotal = $product_model->price * $qty;
         $total += $subtotal;
@@ -150,7 +151,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                         </form>
 
                         <div class="dropdown me-4">
-                            <a href="#" class="nav-link text-white" data-bs-toggle="dropdown">
+                            <!-- <a href="#" class="nav-link text-white" data-bs-toggle="dropdown">
                                 <svg width="15" height="22" viewBox="0 0 15 22" fill="none"
                                     xmlns="http://www.w3.org/2000/svg">
                                     <path
@@ -160,7 +161,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                                         d="M7.5 11.5C5.51155 11.5026 3.60518 12.4517 2.19914 14.139C0.79309 15.8262 0.00220571 18.1139 0 20.5C0 20.7652 0.0877973 21.0196 0.244078 21.2071C0.400358 21.3946 0.61232 21.5 0.833333 21.5C1.05435 21.5 1.26631 21.3946 1.42259 21.2071C1.57887 21.0196 1.66667 20.7652 1.66667 20.5C1.66667 18.6435 2.28125 16.863 3.37521 15.5503C4.46917 14.2375 5.9529 13.5 7.5 13.5C9.0471 13.5 10.5308 14.2375 11.6248 15.5503C12.7188 16.863 13.3333 18.6435 13.3333 20.5C13.3333 20.7652 13.4211 21.0196 13.5774 21.2071C13.7337 21.3946 13.9457 21.5 14.1667 21.5C14.3877 21.5 14.5996 21.3946 14.7559 21.2071C14.9122 21.0196 15 20.7652 15 20.5C14.9978 18.1139 14.2069 15.8262 12.8009 14.139C11.3948 12.4517 9.48845 11.5026 7.5 11.5Z"
                                         fill="white" />
                                 </svg>
-                            </a>
+                            </a> -->
                             <ul class="dropdown-menu">
                                 <?php if (isset($_SESSION['user_id'])): ?>
                                     <li><a class="dropdown-item" href="profile.php">My Profile</a></li>

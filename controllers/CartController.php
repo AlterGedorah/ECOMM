@@ -34,5 +34,10 @@ class CartController {
         
         return ['items' => $cart_items, 'total' => $total];
     }
+    public function clear() {
+        $this->cart->clear();
+        
+    }
+
 }
 ?>
