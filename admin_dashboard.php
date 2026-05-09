@@ -47,10 +47,10 @@ $products = $productController->adminIndex();
                 <h4>R3 Farm Admin</h4>
                 <hr>
                 <div class="nav flex-column">
-                    <a href="#products" class="text-light text-decoration-none py-1">📦 Products</a>
-                    <a href="#add" class="text-light text-decoration-none py-1">➕ Add Product</a>
-                    <a href="/ECOMM/index.php" class="text-light text-decoration-none py-1">🌐 View Site</a>
-                    <a href="/ECOMM/logout.php" class="text-light text-decoration-none py-1 text-danger">🚪 Logout</a>
+                    <a href="#products" class="text-light text-decoration-none py-1">Products</a>
+                    <a href="#add" class="text-light text-decoration-none py-1">Add Product</a>
+                    <a href="/ECOMM/index.php" class="text-light text-decoration-none py-1">View Site</a>
+                    <a href="/ECOMM/logout.php" class="text-light text-decoration-none py-1 text-danger">Logout</a>
                 </div>
             </div>
             

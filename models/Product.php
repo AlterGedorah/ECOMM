@@ -21,7 +21,7 @@ class Product {
     public function create() {
         $stmt = $this->conn->prepare("INSERT INTO {$this->table} (name, category, price, quantity, image_url) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("ssdis", $this->name, $this->category, $this->price, $this->quantity, $this->image_url);
-        return $stmt->execute();
+        return $stmt->execute();    
     }
     
     public function read($id) {
