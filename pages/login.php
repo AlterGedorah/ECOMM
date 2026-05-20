@@ -1,5 +1,5 @@
 <?php
-require_once 'config/Database.php';
+require_once '../config/Database.php';
 
 $error = null;
 
@@ -26,14 +26,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 
             if (strcmp($password, $user['password']) == 0) {
-                setcookie("user_id", $user['id'], time() + 30, "/");
-                setcookie("user_name", $user['name'], time() + 30, "/");
-                setcookie("user_role", $user['role'], time() + 30, "/");
+                setcookie("user_id", $user['id'], time() + (86400 * 7), "/");
+                setcookie("user_name", $user['name'], time() + (86400 * 7), "/");
+                setcookie("user_role", $user['role'], time() + (86400 * 7), "/");
 
                 if ($user['role'] == 'admin') {
-                    header("Location: /ECOMM/admin_dashboard.php");
+                    header("Location: ../admin_dashboard.php");
                 } else {
-                    header("Location: /ECOMM/index.php");
+                    header("Location: ../index.php");
                 }
                 exit();
             } else {
@@ -59,284 +59,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap"
         rel="stylesheet" />
+    <link rel="stylesheet" href="../styles/login.css">
 
-    <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        :root {
-            --panel-bg: #2f4a3c;
-            --panel-light: #3a5a4a;
-            --accent: #f5f0e8;
-            --link: #8ec99a;
-            --input-bg: transparent;
-            --input-border: rgba(255, 255, 255, 0.35);
-            --input-focus: rgba(255, 255, 255, 0.7);
-            --text-main: #f0ece3;
-            --text-muted: rgba(240, 236, 227, 0.65);
-            --btn-primary-bg: #f0ece3;
-            --btn-primary-text: #2f4a3c;
-            --google-bg: #f5f0e8;
-            --google-text: #2f4a3c;
-        }
-
-        html,
-        body {
-            height: 100%;
-            overflow: hidden;
-            font-family: 'DM Sans', sans-serif;
-        }
-
-        .page-wrapper {
-            display: flex;
-            height: 100vh;
-            width: 100vw;
-        }
-
-        /* LEFT HERO */
-        .hero-pane {
-            flex: 1 1 70%;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-pane img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .hero-pane::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background:
-                linear-gradient(to right, rgba(0, 0, 0, .38) 0%, transparent 70%),
-                linear-gradient(to top, rgba(0, 0, 0, .30) 0%, transparent 60%);
-        }
-
-        .hero-text {
-            position: absolute;
-            bottom: 80px;
-            left: 48px;
-            color: #fff;
-            z-index: 2;
-            max-width: 500px;
-        }
-
-        .hero-text h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(2rem, 3.2vw, 3rem);
-            line-height: 1.18;
-            margin-bottom: 16px;
-        }
-
-        .hero-text p {
-            font-size: 0.97rem;
-            font-weight: 300;
-            line-height: 1.65;
-            opacity: .88;
-        }
-
-        /* AUTH PANEL */
-        .auth-pane {
-            width: 360px;
-            min-width: 320px;
-            background: var(--panel-bg);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow-y: auto;
-        }
-
-        .auth-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 18px 28px 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .brand-logo {
-            width: 36px;
-            height: 36px;
-            background: rgba(255, 255, 255, 0.12);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .auth-body {
-            flex: 1;
-            padding: 40px 36px 30px;
-            display: flex;
-            flex-direction: column;
-            animation: fadeUp .45s ease both;
-        }
-
-        .auth-body h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.1rem;
-            color: var(--text-main);
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            font-size: 0.82rem;
-            color: var(--text-muted);
-            line-height: 1.55;
-            margin-bottom: 30px;
-        }
-
-        .btn-google {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: var(--google-bg);
-            color: var(--google-text);
-            border: none;
-            border-radius: 4px;
-            padding: 10px 16px;
-            width: 100%;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-
-        .btn-google img {
-            width: 18px;
-            height: 18px;
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 22px 0 20px;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: rgba(255, 255, 255, 0.18);
-        }
-
-        .field-label {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-
-        .auth-input {
-            width: 100%;
-            background: transparent;
-            border: 1px solid var(--input-border);
-            border-radius: 4px;
-            padding: 10px 12px;
-            color: var(--text-main);
-            font-size: 0.88rem;
-            outline: none;
-            transition: .2s;
-        }
-
-        .auth-input::placeholder {
-            color: rgba(240, 236, 227, 0.35);
-        }
-
-        .auth-input:focus {
-            border-color: var(--input-focus);
-            box-shadow: 0 0 0 3px rgba(142, 201, 154, .15);
-        }
-
-        .mb-field {
-            margin-bottom: 16px;
-        }
-
-        .meta-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 6px;
-            margin-bottom: 28px;
-            font-size: 0.78rem;
-        }
-
-        .meta-row label,
-        .meta-row a {
-            color: var(--text-muted);
-            text-decoration: none;
-        }
-
-        .btn-primary-auth {
-            width: 100%;
-            background: var(--btn-primary-bg);
-            color: var(--btn-primary-text);
-            border: none;
-            border-radius: 4px;
-            padding: 12px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: .2s;
-        }
-
-        .btn-primary-auth:hover {
-            background: white;
-            transform: translateY(-1px);
-        }
-
-        .auth-footer {
-            margin-top: 20px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .auth-footer a {
-            color: var(--link);
-            text-decoration: none;
-        }
-
-        .page-footer {
-            position: absolute;
-            bottom: 10px;
-            right: 20px;
-            font-size: 0.65rem;
-            color: rgba(240, 236, 227, 0.2);
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(14px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    </style>
+    
 </head>
-
 <body>
 
     <div class="page-wrapper">
-
         <!-- LEFT -->
         <div class="hero-pane">
-            <img src="images/crops.jpg" alt="Agriculture">
+            <img src="../images/crops.jpg" alt="Agriculture">
 
             <div class="hero-text">
                 <h1>Cultivating the<br>future of global<br>agriculture.</h1>
@@ -352,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="auth-pane">
 
             <nav class="auth-nav">
-                <div class="brand-logo"><a href="index.php">
+                <div class="brand-logo"><a href="../index.php">
                         <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
                                 d="M36 18C36 27.9411 27.9411 36 18 36C8.05887 36 0 27.9411 0 18C0 8.05887 8.05887 0 18 0C27.9411 0 36 8.05887 36 18Z"
@@ -392,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
 
                 <!-- FORM -->
-                <form method="POST" action="/ECOMM/login.php">
+                <form method="POST" action="">
 
                     <!-- EMAIL -->
                     <div class="mb-field">

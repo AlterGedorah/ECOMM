@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'config/Database.php';
+require_once '../config/Database.php';
 
 $error = null;
 $success = null;
@@ -77,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap"
         rel="stylesheet" />
+    
     <style>
         *,
         *::before,
@@ -396,7 +397,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <!-- LEFT hero -->
         <div class="hero-pane">
-            <img src="images/crops.jpg" alt="Rice field with hand holding grain stalks" />
+            <img src="../images/crops.jpg" alt="Rice field with hand holding grain stalks" />
             <div class="hero-text">
                 <h1>Cultivating the<br>future of global<br>agriculture.</h1>
                 <p>Tomorrow's farming will grow smarter, not just bigger—where<br>
@@ -407,7 +408,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <!-- RIGHT auth panel -->
         <div class="auth-pane">
             <nav class="auth-nav">
-              <a href="index.php">
+              <a href="../index.php">
                             <svg width="36" height="36" viewBox="0 0 36 36" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path
