@@ -1,5 +1,10 @@
+<?php
+if (!isset($cart_count)) {
+    $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
+}
+?>
 <!-- Nav bar -->
-<nav class="fixed-top p-3 shadow-lg px-4" style="background-color: #385144;">
+<nav class="sticky-top p-3 shadow-lg px-4 mb-2" style="background-color: #385144;">
     <div class="container-fluid">
         <div class="row w-100 align-items-center">
             <!-- Logo and nav links -->

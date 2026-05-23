@@ -38,6 +38,19 @@ class CartController {
         $this->cart->clear();
         
     }
-
+    public function add() {
+        if(isset($_POST['product_id'], $_POST['quantity'])) {
+            $id = (int)$_POST['product_id'];
+            $qty = (int)$_POST['quantity'];
+            $this->cart->add($id, $qty);
+        }
+    }
+     public function update() {
+        if(isset($_POST['product_id'], $_POST['quantity'])) {
+            $id = (int)$_POST['product_id'];
+            $qty = (int)$_POST['quantity'];
+            $this->cart->update($id, $qty);
+        }
+     }
 }
 ?>

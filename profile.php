@@ -1,9 +1,9 @@
 <?php
 session_start();
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: /ECOMM/login.php");
+// Check if user is logged in (via cookies or session)
+if (!isset($_COOKIE['user_id']) && !isset($_SESSION['user_id'])) {
+    header("Location: /ECOMM/pages/login.php");
     exit();
 }
 
@@ -12,7 +12,7 @@ require_once 'config/Database.php';
 $database = new Database();
 $conn = $database->getConnection();
 
-$user_id = $_SESSION['user_id'];
+$user_id = $_COOKIE['user_id'] ?? $_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -24,35 +24,29 @@ date_default_timezone_set('Asia/Manila');
 // Format dates
 $member_since = date('F j, Y', strtotime($user['created_at']));
 $member_time = date('g:i A', strtotime($user['created_at']));
-
-// Get order count (if orders table exists)
-$order_count = 0;
-$order_total = 0;
-$stmt = $conn->prepare("SELECT COUNT(*) as count, SUM(total_amount) as total FROM orders WHERE user_id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$order_result = $stmt->get_result();
-if ($order_result->num_rows > 0) {
-    $order_data = $order_result->fetch_assoc();
-    $order_count = $order_data['count'] ?? 0;
-    $order_total = $order_data['total'] ?? 0;
-}
 ?>
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>My Profile - R3 Farm</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/profile.css">
 </head>
+
 <body>
-    <div class="container mt-5">
+    <?php include 'components/navbar.comp.php' ?>
+    <div class="container">
+
         <div class="row">
+
             <div class="col-md-4">
                 <div class="card shadow">
                     <div class="card-body text-center">
                         <div class="mb-3">
-                            <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                            <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center"
+                                style="width: 100px; height: 100px;">
                                 <span class="text-white display-4"><?= strtoupper(substr($user['name'], 0, 1)) ?></span>
                             </div>
                         </div>
@@ -65,7 +59,7 @@ if ($order_result->num_rows > 0) {
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-8">
                 <div class="card shadow">
                     <div class="card-header bg-success text-white">
@@ -80,7 +74,7 @@ if ($order_result->num_rows > 0) {
                                 <?= htmlspecialchars($user['name']) ?>
                             </div>
                         </div>
-                        
+
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <strong>Email Address:</strong>
@@ -89,7 +83,7 @@ if ($order_result->num_rows > 0) {
                                 <?= $user['email'] ?>
                             </div>
                         </div>
-                        
+
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <strong>Account Type:</strong>
@@ -98,16 +92,16 @@ if ($order_result->num_rows > 0) {
                                 <span class="badge bg-info"><?= ucfirst($user['role']) ?></span>
                             </div>
                         </div>
-                        
+
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <strong>Orders Placed:</strong>
-                            </div>  
+                            </div>
                             <div class="col-md-8">
                                 <?= $order_count ?> order(s)
                             </div>
                         </div>
-                        
+
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <strong>Total Spent:</strong>
@@ -116,7 +110,7 @@ if ($order_result->num_rows > 0) {
                                 ₱<?= number_format($order_total, 2) ?>
                             </div>
                         </div>
-                        
+
                         <hr>
                         <div class="d-flex justify-content-between">
                             <a href="index.php" class="btn btn-outline-success">← Back to Shop</a>
@@ -127,7 +121,8 @@ if ($order_result->num_rows > 0) {
             </div>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
