@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $user = $result->fetch_assoc();
 
 
-            if (strcmp($password, $user['password']) == 0) {
+            if (password_verify($password, $user['password']) || strcmp($password, $user['password']) == 0) {
                 setcookie("user_id", $user['id'], time() + (86400 * 7), "/");
                 setcookie("user_name", $user['name'], time() + (86400 * 7), "/");
                 setcookie("user_role", $user['role'], time() + (86400 * 7), "/");

@@ -66,7 +66,7 @@ if (!isset($cart_count)) {
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="logout.php">Logout</a></li>
+                            <li><a class="dropdown-item" href="/ECOMM/pages/logout.php">Logout</a></li>
                         <?php else: ?>
                             <li><a class="dropdown-item" href="/ECOMM/pages/login.php">Login</a></li>
                             <li><a class="dropdown-item" href="/ECOMM/pages/register.php">Register</a></li>

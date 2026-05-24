@@ -8,7 +8,7 @@ class User {
     public $id;
     public $name;
     public $email;
-    public $password; // Plain text
+    public $password;
     public $role;
     
     public function __construct() {
@@ -27,9 +27,10 @@ class User {
             return false;
         }
         
-        // Insert with plain text password (NO HASH)
+        $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
+
         $stmt = $this->conn->prepare("INSERT INTO {$this->table} (name, email, password) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $this->name, $this->email, $this->password);
+        $stmt->bind_param("sss", $this->name, $this->email, $hashedPassword);
         
         if ($stmt->execute()) {
             $this->id = $stmt->insert_id;
@@ -39,19 +40,20 @@ class User {
     }
     
     public function login() {
-        // Direct comparison of plain text
-        $stmt = $this->conn->prepare("SELECT id, name, email, password, role FROM {$this->table} WHERE email = ? AND password = ?");
-        $stmt->bind_param("ss", $this->email, $this->password);
+        $stmt = $this->conn->prepare("SELECT id, name, email, password, role FROM {$this->table} WHERE email = ?");
+        $stmt->bind_param("s", $this->email);
         $stmt->execute();
         $result = $stmt->get_result();
         
         if ($result->num_rows == 1) {
             $row = $result->fetch_assoc();
-            $this->id = $row['id'];
-            $this->name = $row['name'];
-            $this->email = $row['email'];
-            $this->role = $row['role'];
-            return true;
+            if (password_verify($this->password, $row['password']) || $this->password === $row['password']) {
+                $this->id = $row['id'];
+                $this->name = $row['name'];
+                $this->email = $row['email'];
+                $this->role = $row['role'];
+                return true;
+            }
         }
         return false;
     }
