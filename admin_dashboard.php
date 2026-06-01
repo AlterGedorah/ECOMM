@@ -123,6 +123,7 @@ $products = $productController->adminIndex();
                                         <th>Image</th>
                                         <th>Name</th>
                                         <th>Category</th>
+                                        <th>Seller</th>
                                         <th>Price</th>
                                         <th>Stock</th>
                                         <th>Actions</th>
@@ -156,6 +157,10 @@ $products = $productController->adminIndex();
                                                         <option value="grains" <?= $product['category'] == 'grains' ? 'selected' : '' ?>>Grains</option>
                                                         <option value="cash_crops" <?= $product['category'] == 'cash_crops' ? 'selected' : '' ?>>Cash Crops</option>
                                                     </select>
+                                                </td>
+
+                                                <td>
+                                                    <?= htmlspecialchars($product['shop_name'] ?? $product['seller_name'] ?? 'Platform') ?>
                                                 </td>
                                                 
                                                 <td>

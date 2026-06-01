@@ -7,6 +7,7 @@ $productController = new ProductController();
 $data = $productController->index();
 $categories = $data['categories'];
 $products = $data['products'];
+$shops = $data['shops'];
 $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 
 ?>
@@ -16,13 +17,48 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R3 Farm</title>
+    <title>R3 Farm - Farmer Marketplace</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
-    
-    <?php include 'components/navbar.comp.php';?>
+
+    <?php include 'components/navbar.comp.php'; ?>
+
+    <div class="container py-4">
+        <div class="row g-4 align-items-stretch">
+            <div class="col-lg-8">
+                <div class="p-5 rounded-5 text-white h-100" style="background: linear-gradient(135deg, #234632 0%, #3f6a43 55%, #9cc46c 100%); box-shadow: 0 24px 60px rgba(16, 40, 24, .16);">
+                    <div class="mb-3 text-uppercase small fw-semibold" style="letter-spacing: .18em;">Farm-to-table commerce</div>
+                    <h1 class="display-5 fw-semibold mb-3">Buy directly from local farmers and manage your own farm shop.</h1>
+                    <p class="lead mb-4" style="max-width: 720px;">R3 Farm connects customers with farmer sellers, fresh seasonal produce, and public shop pages for every farm on the platform.</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="#featured-shops" class="btn btn-light btn-lg rounded-pill px-4">Browse farmer shops</a>
+                        <a href="/ECOMM/pages/register.php" class="btn btn-outline-light btn-lg rounded-pill px-4">Open a seller account</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="bg-white rounded-5 shadow-sm h-100 p-4">
+                    <div class="text-uppercase text-secondary small fw-semibold mb-2">Marketplace stats</div>
+                    <div class="display-6 fw-bold mb-1"><?= count($shops) ?></div>
+                    <div class="text-muted mb-4">Active farmer shops on the platform</div>
+                    <div class="d-flex justify-content-between border-top pt-3 mb-3">
+                        <span class="text-muted">Fresh categories</span>
+                        <span class="fw-semibold"><?= count($categories) ?></span>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-3 mb-3">
+                        <span class="text-muted">Products featured</span>
+                        <span class="fw-semibold">Direct from farms</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-3">
+                        <span class="text-muted">Public shop pages</span>
+                        <span class="fw-semibold">Enabled</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero section (same) -->
     <div class="container text-light">
@@ -117,6 +153,40 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
         </div>
     </div>
 
+    <div id="featured-shops" class="container mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <div class="text-uppercase text-secondary small fw-semibold">Featured farmer shops</div>
+                <h2 class="h3 mb-0">Shops worth visiting</h2>
+            </div>
+            <a href="/ECOMM/pages/register.php" class="btn btn-outline-success rounded-pill px-4">Become a seller</a>
+        </div>
+        <div class="row g-4">
+            <?php foreach ($shops as $shop): ?>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="card border-0 rounded-5 shadow-sm h-100 overflow-hidden">
+                        <div style="height: 160px; background: linear-gradient(135deg, rgba(35,70,50,.95), rgba(76,127,76,.78)), url('images/crops.jpg') center/cover;"></div>
+                        <div class="card-body p-4">
+                            <div class="text-uppercase text-secondary small fw-semibold mb-2">Farmer seller</div>
+                            <h3 class="h5 mb-2"><?= htmlspecialchars($shop['shop_name'] ?: $shop['name']) ?></h3>
+                            <p class="text-muted mb-2"><?= htmlspecialchars($shop['farm_location'] ?: 'Location not shared yet') ?></p>
+                            <p class="small text-secondary mb-3"><?= htmlspecialchars($shop['shop_bio'] ?: 'Fresh produce and seasonal harvests from the farm.') ?></p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small text-muted"><?= (int) ($shop['product_count'] ?? 0) ?> product(s)</span>
+                                <a href="/ECOMM/shop.php?shop=<?= urlencode($shop['shop_slug']) ?>" class="btn btn-success rounded-pill px-4">Visit shop</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+            <?php if (empty($shops)): ?>
+                <div class="col-12">
+                    <div class="alert alert-info">No seller shops have been created yet. Register a farmer seller account to start the marketplace.</div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
     <!-- Dynamic product sections with MODAL -->
     <?php foreach ($categories as $key => $label): ?>
         <div class="m-5">
@@ -139,6 +209,9 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                             <div class="p-4" style="background-color: #F6F3F0;">
                                 <div class="h4"><?= htmlspecialchars($product['name']) ?></div>
                                 <div class="text-secondary">₱<?= number_format($product['price'], 2) ?></div>
+                                <?php if (!empty($product['seller_name'])): ?>
+                                    <div class="small text-muted mt-1">From <a href="/ECOMM/shop.php?shop=<?= urlencode($product['shop_slug']) ?>" class="text-decoration-none"><?= htmlspecialchars($product['shop_name'] ?: $product['seller_name']) ?></a></div>
+                                <?php endif; ?>
 
                                 <!-- Stock indicator -->
                                 <?php if ($product['quantity'] > 0): ?>
@@ -170,80 +243,90 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 
     <!-- Refined Product Modal -->
     <div class="modal fade" id="productModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden; background-color: #f5f2ee;">
-            <!-- Close button -->
-            <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="z-index:10;"></button>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0"
+                style="border-radius: 20px; overflow: hidden; background-color: #f5f2ee;">
+                <!-- Close button -->
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"
+                    style="z-index:10;"></button>
 
-            <!-- Top section: image + purchase panel -->
-            <div class="modal-body p-0">
-                <div class="row g-0">
-                    <!-- Product Image -->
-                    <div class="col-md-6 d-flex align-items-center justify-content-center p-4" style="background-color: #f5f2ee;">
-                        <img src="" id="modalImage" class="img-fluid"
-                            style="max-height: 280px; object-fit: contain; border-radius: 16px;">
-                    </div>
+                <!-- Top section: image + purchase panel -->
+                <div class="modal-body p-0">
+                    <div class="row g-0">
+                        <!-- Product Image -->
+                        <div class="col-md-6 d-flex align-items-center justify-content-center p-4"
+                            style="background-color: #f5f2ee;">
+                            <img src="" id="modalImage" class="img-fluid"
+                                style="max-height: 280px; object-fit: contain; border-radius: 16px;">
+                        </div>
 
-                    <!-- Right Panel -->
-                    <div class="col-md-6 p-4 d-flex flex-column justify-content-center">
-                        <h2 id="modalName" class="fw-bold text-uppercase mb-3" style="letter-spacing: 1px;"></h2>
+                        <!-- Right Panel -->
+                        <div class="col-md-6 p-4 d-flex flex-column justify-content-center">
+                            <h2 id="modalName" class="fw-bold text-uppercase mb-3" style="letter-spacing: 1px;"></h2>
 
-                        <!-- Purchase Box -->
-                        <div class="border rounded-4 p-4 bg-white shadow-sm">
-                            <!-- Price -->
-                            <p class="fw-semibold mb-3" id="modalPrice" style="font-size: 1.1rem;"></p>
+                            <!-- Purchase Box -->
+                            <div class="border rounded-4 p-4 bg-white shadow-sm">
+                                <!-- Price -->
+                                <p class="fw-semibold mb-3" id="modalPrice" style="font-size: 1.1rem;"></p>
 
-                            <!-- Stock info -->
-                            <div id="modalStock" class="mb-3"></div>
+                                <!-- Stock info -->
+                                <div id="modalStock" class="mb-3"></div>
 
-                            <form method="POST" action="add_to_cart.php" id="addToCartForm">
-                                <input type="hidden" name="product_id" id="modalProductId">
+                                <form method="POST" action="add_to_cart.php" id="addToCartForm">
+                                    <input type="hidden" name="product_id" id="modalProductId">
 
-                                <!-- Quantity -->
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between align-items-center border rounded-pill px-4 py-2 bg-white" style="cursor:pointer;">
-                                        <label class="form-label mb-0 fw-medium" style="font-size:0.95rem;">Add quantity</label>
-                                        <input type="number" name="quantity" id="modalQuantity" value="1" min="1" max="99"
-                                            class="border-0 text-end fw-semibold"
-                                            style="width: 60px; outline:none; background:transparent; font-size:0.95rem;">
+                                    <!-- Quantity -->
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center border rounded-pill px-4 py-2 bg-white"
+                                            style="cursor:pointer;">
+                                            <label class="form-label mb-0 fw-medium" style="font-size:0.95rem;">Add
+                                                quantity</label>
+                                            <input type="number" name="quantity" id="modalQuantity" value="1" min="1"
+                                                max="99" class="border-0 text-end fw-semibold"
+                                                style="width: 60px; outline:none; background:transparent; font-size:0.95rem;">
+                                        </div>
                                     </div>
-                                </div>
 
-                                <!-- Purchase Button -->
-                                <button type="submit" id="modalAddToCartBtn"
-                                    class="btn w-100 py-3 fw-bold rounded-pill text-white"
-                                    style="background-color: #1a5c2a; font-size: 1rem; letter-spacing: 0.5px;">
-                                    Purchase
-                                </button>
-                            </form>
+                                    <!-- Purchase Button -->
+                                    <button type="submit" id="modalAddToCartBtn"
+                                        class="btn w-100 py-3 fw-bold rounded-pill text-white"
+                                        style="background-color: #1a5c2a; font-size: 1rem; letter-spacing: 0.5px;">
+                                        Purchase
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Bottom section: Your preferences -->
-                <div class="border-top px-4 py-4" style="background-color: #f5f2ee;">
-                    <h5 class="fw-bold mb-3">Your preferences</h5>
-                    <label class="form-label fw-semibold mb-2">Special Instruction</label>
-                    <div class="d-flex align-items-center gap-2">
-                        <input type="text" id="modalNote" class="form-control rounded-pill"
-                            placeholder="I would like to..."
-                            style="max-width: 360px; background: white; border: 1px solid #ccc;">
+                    <!-- Bottom section: Your preferences -->
+                    <div class="border-top px-4 py-4" style="background-color: #f5f2ee;">
+                        <h5 class="fw-bold mb-3">Your preferences</h5>
+                        <label class="form-label fw-semibold mb-2">Special Instruction</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="text" id="modalNote" class="form-control rounded-pill"
+                                placeholder="I would like to..."
+                                style="max-width: 360px; background: white; border: 1px solid #ccc;">
+                        </div>
+                        <div class="mt-2 d-flex gap-2">
+                            <button class="btn btn-secondary rounded-pill px-4 py-1"
+                                onclick="document.getElementById('modalNote').value=''">Cancel</button>
+                            <button class="btn rounded-pill px-4 py-1 text-white fw-semibold"
+                                style="background-color: #1a5c2a;">Save</button>
+                        </div>
                     </div>
-                    <div class="mt-2 d-flex gap-2">
-                        <button class="btn btn-secondary rounded-pill px-4 py-1" onclick="document.getElementById('modalNote').value=''">Cancel</button>
-                        <button class="btn rounded-pill px-4 py-1 text-white fw-semibold" style="background-color: #1a5c2a;">Save</button>
-                    </div>
-                </div>
 
-                <!-- Disclaimer -->
-                <div class="border-top px-4 py-3" style="background-color: #f5f2ee; font-size: 0.75rem; color: #666;">
-                    Product information or packaging displayed may not be current or complete. Always refer to the physical product for the most accurate information.
-                    <br><em>*Actual weight may vary based on seasonality and other factors. Estimated price is approximate and provided only for reference.</em>
+                    <!-- Disclaimer -->
+                    <div class="border-top px-4 py-3"
+                        style="background-color: #f5f2ee; font-size: 0.75rem; color: #666;">
+                        Product information or packaging displayed may not be current or complete. Always refer to the
+                        physical product for the most accurate information.
+                        <br><em>*Actual weight may vary based on seasonality and other factors. Estimated price is
+                            approximate and provided only for reference.</em>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Bottom Banner -->
     <div class="mb-5 mt-5 px-5">
@@ -463,5 +546,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
             });
         });
     </script>
+    
+</body>
 
 </html>

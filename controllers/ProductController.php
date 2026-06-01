@@ -7,6 +7,19 @@ class ProductController {
     public function __construct() {
         $this->product = new Product();
     }
+
+    private function currentUserRole() {
+        return $_COOKIE['user_role'] ?? null;
+    }
+
+    private function currentUserId() {
+        return isset($_COOKIE['user_id']) ? (int) $_COOKIE['user_id'] : 0;
+    }
+
+    private function redirectAfterSave() {
+        header("Location: " . ($this->currentUserRole() === 'seller' ? '/ECOMM/seller_dashboard.php' : '/ECOMM/admin_dashboard.php'));
+        exit();
+    }
     
     public function index() {
         $categories = [
@@ -22,7 +35,7 @@ class ProductController {
             $products_by_cat[$key] = $this->product->getByCategory($key, 4);
         }
         
-        return ['categories' => $categories, 'products' => $products_by_cat];
+        return ['categories' => $categories, 'products' => $products_by_cat, 'shops' => $this->product->getFeaturedShops(6)];
     }
     
     public function adminIndex() {
@@ -48,14 +61,21 @@ class ProductController {
                 $_SESSION['flash'] = ['type' => 'danger', 'message' => ' Failed to create product'];
             }
             
-            header("Location: /ECOMM/admin_dashboard.php");
-            exit();
+            $this->redirectAfterSave();
         }
     }
     
     public function update() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $this->product->id = $_POST['id'];
+
+            $current = new Product();
+            $current->read($this->product->id);
+
+            if ($this->currentUserRole() === 'seller' && (int) $current->seller_id !== $this->currentUserId()) {
+                $_SESSION['flash'] = ['type' => 'danger', 'message' => 'You can only edit your own farm products.'];
+                $this->redirectAfterSave();
+            }
             
             $this->product->name = $_POST['name'];
             $this->product->category = $_POST['category'];
@@ -67,10 +87,10 @@ class ProductController {
                 $this->product->image_url = $this->product->uploadImage($_FILES['image']);
             } else {
                 // Keep existing image
-                $current = new Product();
-                $current->read($this->product->id);
                 $this->product->image_url = $current->image_url;
             }
+
+            $this->product->seller_id = $current->seller_id;
             
             if ($this->product->update()) {
                 $_SESSION['flash'] = ['type' => 'success', 'message' => 'Product updated successfully!'];
@@ -78,14 +98,21 @@ class ProductController {
                 $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Failed to update product'];
             }
             
-            header("Location: /ECOMM/admin_dashboard.php");
-            exit();
+            $this->redirectAfterSave();
         }
     }
     
     public function delete() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $this->product->id = $_POST['id'];
+
+            $current = new Product();
+            $current->read($this->product->id);
+
+            if ($this->currentUserRole() === 'seller' && (int) $current->seller_id !== $this->currentUserId()) {
+                $_SESSION['flash'] = ['type' => 'danger', 'message' => 'You can only delete your own farm products.'];
+                $this->redirectAfterSave();
+            }
             
             if ($this->product->delete()) {
                 $_SESSION['flash'] = ['type' => 'success', 'message' => 'Product deleted successfully!'];
@@ -93,9 +120,20 @@ class ProductController {
                 $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Failed to delete product'];
             }
             
-            header("Location: /ECOMM/admin_dashboard.php");
-            exit();
+            $this->redirectAfterSave();
         }
+    }
+
+    public function sellerProducts($sellerId) {
+        return $this->product->getBySeller($sellerId);
+    }
+
+    public function shopProducts($shopSlug) {
+        return $this->product->getByShopSlug($shopSlug);
+    }
+
+    public function featuredShops() {
+        return $this->product->getFeaturedShops(6);
     }
 }
 ?>

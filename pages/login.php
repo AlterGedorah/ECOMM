@@ -29,9 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 setcookie("user_id", $user['id'], time() + (86400 * 7), "/");
                 setcookie("user_name", $user['name'], time() + (86400 * 7), "/");
                 setcookie("user_role", $user['role'], time() + (86400 * 7), "/");
+                setcookie("user_shop_name", $user['shop_name'] ?? '', time() + (86400 * 7), "/");
+                setcookie("user_shop_slug", $user['shop_slug'] ?? '', time() + (86400 * 7), "/");
 
                 if ($user['role'] == 'admin') {
                     header("Location: ../admin_dashboard.php");
+                } elseif ($user['role'] == 'seller') {
+                    header("Location: ../seller_dashboard.php");
                 } else {
                     header("Location: ../index.php");
                 }
@@ -132,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             Email
                         </label>
 
-                        <input type="email" name="email" class="form-control"
+                        <input id="email" type="email" name="email" class="form-control"
                             value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
                     </div>
 
@@ -142,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             Password
                         </label>
 
-                        <input type="password" name="password" class="form-control" required>
+                        <input id="password" type="password" name="password" class="form-control" required>
                     </div>
 
                     <!-- META -->

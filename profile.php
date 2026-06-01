@@ -93,6 +93,25 @@ $member_time = date('g:i A', strtotime($user['created_at']));
                             </div>
                         </div>
 
+                        <?php if (($user['role'] ?? null) === 'seller'): ?>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <strong>Shop Page:</strong>
+                                </div>
+                                <div class="col-md-8">
+                                    <a href="/ECOMM/shop.php?shop=<?= urlencode($user['shop_slug'] ?? '') ?>" class="text-decoration-none">Open public shop</a>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <strong>Farm Location:</strong>
+                                </div>
+                                <div class="col-md-8">
+                                    <?= htmlspecialchars($user['farm_location'] ?? 'Not set') ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <strong>Orders Placed:</strong>

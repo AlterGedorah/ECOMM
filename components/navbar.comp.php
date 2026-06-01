@@ -60,6 +60,10 @@ if (!isset($cart_count)) {
                         <?php if (isset($_COOKIE['user_id'])): ?>
                             <li><a class="dropdown-item" href="profile.php">My Profile</a></li>
                             <li><a class="dropdown-item" href="orders.php">My Orders</a></li>
+                            <?php if (($_COOKIE['user_role'] ?? null) === 'seller' && !empty($_COOKIE['user_shop_slug'])): ?>
+                                <li><a class="dropdown-item" href="/ECOMM/shop.php?shop=<?= urlencode($_COOKIE['user_shop_slug']) ?>">My Shop</a></li>
+                                <li><a class="dropdown-item" href="/ECOMM/seller_dashboard.php">Seller Dashboard</a></li>
+                            <?php endif; ?>
                             <?php if (($_COOKIE['user_role'] ?? null) === 'admin'): ?>
                                 <li><a class="dropdown-item" href="admin_dashboard.php">Admin Panel</a></li>
                             <?php endif; ?>

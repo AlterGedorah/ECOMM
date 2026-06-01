@@ -6,7 +6,7 @@ class Database {
     private $dbname = "r3_farm";
     private $conn;
     
-    public function getConnection() {
+    public function getConnection(): mysqli {
         $this->conn = new mysqli($this->host, $this->user, $this->pass, $this->dbname);
         
         if ($this->conn->connect_error) {

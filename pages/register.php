@@ -10,31 +10,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
+    $role = $_POST['role'] ?? 'user';
+    $shop_name = trim($_POST['shop_name'] ?? '');
+    $shop_slug = trim($_POST['shop_slug'] ?? '');
+    $farm_location = trim($_POST['farm_location'] ?? '');
+    $shop_bio = trim($_POST['shop_bio'] ?? '');
+
+    if (!in_array($role, ['user', 'seller'], true)) {
+        $error = "Invalid account type!";
+    }
 
     // Validation using string functions
-    if (empty($name)) {
+    if (!$error && empty($name)) {
         $error = "Name is required!";
-    } elseif (!preg_match("/^[a-zA-Z ]+$/", $name)) {
+    } elseif (!$error && !preg_match("/^[a-zA-Z ]+$/", $name)) {
         $error = "Name can only contain letters and spaces!";
-    } elseif (strlen($name) < 2) {
+    } elseif (!$error && strlen($name) < 2) {
         $error = "Name must be at least 2 characters!";
     }
 
     // Email validation
-    elseif (empty($email)) {
+    if (!$error && empty($email)) {
         $error = "Email is required!";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    } elseif (!$error && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Invalid email format!";
     }
 
     // Password validation
-    elseif (empty($password)) {
+    if (!$error && empty($password)) {
         $error = "Password is required!";
-    } elseif (strlen($password) < 6) {
+    } elseif (!$error && strlen($password) < 6) {
         $error = "Password must be at least 6 characters!";
-    } elseif ($password !== $confirm_password) {
+    } elseif (!$error && $password !== $confirm_password) {
         $error = "Passwords do not match!";
-    } else {
+    }
+
+    if (!$error && $role === 'seller' && empty($shop_name)) {
+        $error = "Shop name is required for seller accounts!";
+    }
+
+    if (!$error && $role === 'seller' && empty($shop_slug)) {
+        $shop_slug = preg_replace('/[^a-z0-9]+/', '-', strtolower($shop_name));
+        $shop_slug = trim($shop_slug, '-');
+    }
+
+    if (!$error) {
         // Check if email exists
         $database = new Database();
         $conn = $database->getConnection();
@@ -48,16 +68,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error = "Email already registered!";
         } else {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $role = 'user';
-            $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $name, $email, $hashed_password, $role);
+            $shop_name_value = $role === 'seller' ? $shop_name : null;
+            $shop_slug_value = $role === 'seller' ? $shop_slug : null;
+            $farm_location_value = $role === 'seller' ? $farm_location : null;
+            $shop_bio_value = $role === 'seller' ? $shop_bio : null;
+
+            $stmt = $conn->prepare("INSERT INTO users (name, email, password, role, shop_name, shop_slug, farm_location, shop_bio) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssssss", $name, $email, $hashed_password, $role, $shop_name_value, $shop_slug_value, $farm_location_value, $shop_bio_value);
 
             if ($stmt->execute()) {
                 $_SESSION['user_id'] = $stmt->insert_id;
                 $_SESSION['user_name'] = $name;
-                $_SESSION['user_role'] = 'user';
+                $_SESSION['user_role'] = $role;
+                $_SESSION['user_shop_name'] = $shop_name_value;
+                $_SESSION['user_shop_slug'] = $shop_slug_value;
+                setcookie("user_id", $stmt->insert_id, time() + (86400 * 7), "/");
+                setcookie("user_name", $name, time() + (86400 * 7), "/");
+                setcookie("user_role", $role, time() + (86400 * 7), "/");
+                setcookie("user_shop_name", $shop_name_value ?? '', time() + (86400 * 7), "/");
+                setcookie("user_shop_slug", $shop_slug_value ?? '', time() + (86400 * 7), "/");
                 $success = "Account created successfully! Redirecting...";
-                header("Refresh: 2; url=/ECOMM/index.php");
+                header("Refresh: 2; url=/ECOMM/" . ($role === 'seller' ? 'seller_dashboard.php' : 'index.php'));
             } else {
                 $error = "Registration failed!";
             }
@@ -447,6 +478,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <?php endif; ?>
 
                 <form method="POST" action="register.php" id="registerForm">
+                <!-- Account Type -->
+                <div class="mb-field">
+                    <label class="field-label" for="role">Account type</label>
+                    <select id="role" name="role" class="auth-input" style="appearance:none;">
+                        <option value="user" selected>Customer</option>
+                        <option value="seller">Farmer seller</option>
+                    </select>
+                </div>
+
                 <!-- Username -->
                 <div class="mb-field">
                     <label class="field-label" for="username">Username</label>
@@ -458,6 +498,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <label class="field-label" for="email">Email</label>
                     <input id="email" name="email" class="auth-input" type="email" placeholder="mail@example.com"
                         autocomplete="email" />
+                </div>
+
+                <div class="mb-field seller-only" id="sellerFields" hidden>
+                    <label class="field-label" for="shop_name">Farm shop name</label>
+                    <input id="shop_name" name="shop_name" class="auth-input" type="text" placeholder="Green Valley Farm" autocomplete="organization" />
+
+                    <div style="height: 12px;"></div>
+
+                    <label class="field-label" for="shop_slug">Shop URL slug</label>
+                    <input id="shop_slug" name="shop_slug" class="auth-input" type="text" placeholder="green-valley-farm" autocomplete="off" />
+
+                    <div style="height: 12px;"></div>
+
+                    <label class="field-label" for="farm_location">Farm location</label>
+                    <input id="farm_location" name="farm_location" class="auth-input" type="text" placeholder="Laguna, Philippines" autocomplete="street-address" />
+
+                    <div style="height: 12px;"></div>
+
+                    <label class="field-label" for="shop_bio">Shop bio</label>
+                    <textarea id="shop_bio" name="shop_bio" class="auth-input" rows="3" placeholder="Describe your farm, crops, and delivery area."></textarea>
                 </div>
 
                 <!-- Password -->
@@ -484,6 +544,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </label>
                 </div>
 
+                <p class="subtitle" style="margin-top:-6px;margin-bottom:18px;">
+                    Sellers get a public shop page where customers can browse produce directly from your farm.
+                </p>
+
                 <!-- Register btn -->
                 <button class="btn-primary-auth" type="submit" id="registerBtn">Register</button>
 
@@ -503,11 +567,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const registerBtn = document.getElementById('registerBtn');
+        const roleSelect = document.getElementById('role');
         const usernameInput = document.getElementById('username');
         const emailInput = document.getElementById('email');
+        const shopNameInput = document.getElementById('shop_name');
+        const shopSlugInput = document.getElementById('shop_slug');
+        const farmLocationInput = document.getElementById('farm_location');
+        const shopBioInput = document.getElementById('shop_bio');
+        const sellerFields = document.getElementById('sellerFields');
         const passwordInput = document.getElementById('password');
         const confirmInput = document.getElementById('confirmPassword');
         const strengthFill = document.getElementById('strengthFill');
+
+        function syncSellerFields() {
+            const isSeller = roleSelect.value === 'seller';
+            sellerFields.hidden = !isSeller;
+
+            [shopNameInput, shopSlugInput, farmLocationInput, shopBioInput].forEach(inp => {
+                inp.required = isSeller && inp === shopNameInput;
+            });
+        }
+
+        roleSelect.addEventListener('change', syncSellerFields);
+        syncSellerFields();
 
         // password strength meter
         passwordInput.addEventListener('input', () => {
@@ -535,7 +617,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         // clear error on type
-        [usernameInput, emailInput, passwordInput, confirmInput].forEach(inp => {
+        [usernameInput, emailInput, passwordInput, confirmInput, shopNameInput, shopSlugInput, farmLocationInput, shopBioInput].forEach(inp => {
             inp.addEventListener('input', () => inp.classList.remove('error'));
         });
 
@@ -554,6 +636,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 passwordInput.value !== confirmInput.value) {
                 confirmInput.classList.add('error');
                 shake(confirmInput);
+                valid = false;
+            }
+
+            if (roleSelect.value === 'seller' && !shopNameInput.value.trim()) {
+                shopNameInput.classList.add('error');
+                shake(shopNameInput);
                 valid = false;
             }
 

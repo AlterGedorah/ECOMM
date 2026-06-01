@@ -164,6 +164,9 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                         <div class="card-body">
                             <h5 class="card-title"><?= htmlspecialchars($product['name']) ?></h5>
                             <p class="text-success fw-bold">₱<?= number_format($product['price'], 2) ?></p>
+                            <?php if (!empty($product['seller_name'])): ?>
+                                <div class="small text-muted mb-2">From <a href="/ECOMM/shop.php?shop=<?= urlencode($product['shop_slug']) ?>" class="text-decoration-none"><?= htmlspecialchars($product['shop_name'] ?: $product['seller_name']) ?></a></div>
+                            <?php endif; ?>
 
                             <?php if ($product['quantity'] > 0): ?>
                                 <div class="text-success small mb-2">✓ In Stock (<?= $product['quantity'] ?> available)</div>

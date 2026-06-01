@@ -12,6 +12,7 @@ class Product {
     public $quantity;
     public $image_url;
     public $created_at;
+    public $seller_id;
     
     public function __construct() {
         $database = new Database();
@@ -19,8 +20,9 @@ class Product {
     }
     
     public function create() {
-        $stmt = $this->conn->prepare("INSERT INTO {$this->table} (name, category, price, quantity, image_url) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssdis", $this->name, $this->category, $this->price, $this->quantity, $this->image_url);
+        $sellerId = (int) ($this->seller_id ?? 0);
+        $stmt = $this->conn->prepare("INSERT INTO {$this->table} (name, category, price, quantity, image_url, seller_id) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssdisi", $this->name, $this->category, $this->price, $this->quantity, $this->image_url, $sellerId);
         return $stmt->execute();    
     }
     
@@ -38,6 +40,7 @@ class Product {
             $this->price = $row['price'];
             $this->quantity = $row['quantity']; 
             $this->image_url = $row['image_url'];
+            $this->seller_id = $row['seller_id'];
             $this->created_at = $row['created_at'];
             return true;
         }
@@ -45,8 +48,9 @@ class Product {
     }
     
     public function update() {
-        $stmt = $this->conn->prepare("UPDATE {$this->table} SET name = ?, category = ?, price = ?, quantity = ?, image_url = ? WHERE id = ?");
-        $stmt->bind_param("ssdiss", $this->name, $this->category, $this->price, $this->quantity, $this->image_url, $this->id);
+        $sellerId = (int) ($this->seller_id ?? 0);
+        $stmt = $this->conn->prepare("UPDATE {$this->table} SET name = ?, category = ?, price = ?, quantity = ?, image_url = ?, seller_id = ? WHERE id = ?");
+        $stmt->bind_param("ssdissi", $this->name, $this->category, $this->price, $this->quantity, $this->image_url, $sellerId, $this->id);
         return $stmt->execute();
     }
     
@@ -80,7 +84,7 @@ class Product {
     }
     
     public function getByCategory($category, $limit = 4) {
-        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE category = ? ORDER BY created_at DESC LIMIT ?");
+        $stmt = $this->conn->prepare("SELECT p.*, u.name AS seller_name, u.shop_name, u.shop_slug, u.farm_location FROM {$this->table} p LEFT JOIN users u ON u.id = p.seller_id WHERE p.category = ? ORDER BY p.created_at DESC LIMIT ?");
         $stmt->bind_param("si", $category, $limit);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -93,12 +97,62 @@ class Product {
     }
     
     public function getAll() {
-        $result = $this->conn->query("SELECT * FROM {$this->table} ORDER BY created_at DESC");
+        $result = $this->conn->query("SELECT p.*, u.name AS seller_name, u.shop_name, u.shop_slug, u.farm_location FROM {$this->table} p LEFT JOIN users u ON u.id = p.seller_id ORDER BY p.created_at DESC");
         $products = [];
         while ($row = $result->fetch_assoc()) {
             $products[] = $row;
         }
         return $products;
+    }
+
+    public function getBySeller($seller_id, $limit = 1000) {
+        $stmt = $this->conn->prepare("SELECT p.*, u.name AS seller_name, u.shop_name, u.shop_slug, u.farm_location FROM {$this->table} p LEFT JOIN users u ON u.id = p.seller_id WHERE p.seller_id = ? ORDER BY p.created_at DESC LIMIT ?");
+        $stmt->bind_param("ii", $seller_id, $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $products = [];
+        while ($row = $result->fetch_assoc()) {
+            $products[] = $row;
+        }
+
+        return $products;
+    }
+
+    public function getByShopSlug($shop_slug, $limit = 1000) {
+        $stmt = $this->conn->prepare("SELECT p.*, u.name AS seller_name, u.shop_name, u.shop_slug, u.farm_location FROM {$this->table} p INNER JOIN users u ON u.id = p.seller_id WHERE u.shop_slug = ? AND u.role = 'seller' ORDER BY p.created_at DESC LIMIT ?");
+        $stmt->bind_param("si", $shop_slug, $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $products = [];
+        while ($row = $result->fetch_assoc()) {
+            $products[] = $row;
+        }
+
+        return $products;
+    }
+
+    public function getFeaturedShops($limit = 6) {
+        $stmt = $this->conn->prepare(
+            "SELECT u.id, u.name, u.shop_name, u.shop_slug, u.farm_location, u.shop_bio, COUNT(p.id) AS product_count, MAX(p.created_at) AS latest_product_at
+            FROM users u
+            LEFT JOIN {$this->table} p ON p.seller_id = u.id
+            WHERE u.role = 'seller'
+            GROUP BY u.id, u.name, u.shop_name, u.shop_slug, u.farm_location, u.shop_bio
+            ORDER BY product_count DESC, latest_product_at DESC
+            LIMIT ?"
+        );
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $shops = [];
+        while ($row = $result->fetch_assoc()) {
+            $shops[] = $row;
+        }
+
+        return $shops;
     }
     
     // Enhanced uploadImage with resize functionality
