@@ -16,8 +16,9 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R3 Farm</title>
+    <title>Fresh Harvest</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="images/icon.png">
 </head>
 
 <body>
@@ -399,7 +400,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 
                 // Fix image path - add ./ if needed or use default
                 if (!image || image === '' || image === 'null') {
-                    image = '/ECOMM/placeholder.jpg';
+                    image = '/Fresh Harvest/placeholder.jpg';
                 }
 
                 // Debug - check what image path is
@@ -415,7 +416,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                 modalImg.src = image;
                 modalImg.onerror = function () {
                     console.warn('Image failed to load:', image);
-                    this.src = '/ECOMM/placeholder.jpg';
+                    this.src = '/Fresh Harvest/placeholder.jpg';
                 };
 
                 // Set quantity input max based on stock

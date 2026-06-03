@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $_SESSION['user_name'] = $name;
                 $_SESSION['user_role'] = 'user';
                 $success = "Account created successfully! Redirecting...";
-                header("Refresh: 2; url=/ECOMM/index.php");
+                header("Refresh: 2; url=/Fresh Harvest/index.php");
             } else {
                 $error = "Registration failed!";
             }
