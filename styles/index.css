@@ -1,18 +1,12 @@
-@import url(style.css);
-
-body {
-  padding-top: 80px;
+.banner {
+  margin-top: 6rem !important;
 }
 
-.nav-link {
-  color: white !important;
-  transition: opacity 0.3s ease;
-}
-
-.nav-link:hover {
-  opacity: 0.8;
-}
-
-.dropdown-menu {
-  margin-top: 10px;
+.Background {
+  background-image: url('../images/background.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-attachment: scroll;
+  min-height: 100vh;
 }

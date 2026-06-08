@@ -18,15 +18,16 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>R3 Farm</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles/index.css" rel="stylesheet">
 </head>
 
 <body>
-    
-    <?php include 'components/navbar.comp.php';?>
+<div class="Background">
+    <?php include 'components/navbar.comp.php'; ?>
 
     <!-- Hero section (same) -->
-    <div class="container mt-5 text-light">
-        <img src="images/Poster.png" alt="Poster" class="img-fluid w-100" style="object-fit: cover;">
+    <div class="banner container text-light mt-5 overflow-hidden">
+        <img src="images/Poster.png" alt="Hero" class="img-fluid w-100 h-80" object-position: center;>
     </div>
 
     <!-- Top Banner -->
@@ -111,7 +112,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                 </div>
                 <div class="text-center">
                     <div><b>Secure Payment</b></div>
-                    <div class="text-secondary">100% secure chec</div>
+                    <div class="text-secondary">100% secure check</div>
                 </div>
             </div>
         </div>
@@ -121,16 +122,16 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
     <?php foreach ($categories as $key => $label): ?>
         <div class="m-5">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="h3"><?= $label ?></div>
+                <div class="display-5 h3"><?= $label ?></div>
                 <a href="category.php?cat=<?= $key ?>" class="btn btn-outline-success rounded-pill px-4">
                     View All <span class="ms-1">→</span>
                 </a>
             </div>
-            <div class="row">
+            <div class="row ms-5 me-5">
                 <?php foreach ($products[$key] as $product): ?>
                     <div class="col-12 col-md-6 col-lg-4 col-xl-3 mt-3">
-                        <div class="card rounded-5 overflow-hidden h-100">
-                            <div style="height: 300px; background-image: url('<?= $product['image_url'] ?? 'placeholder.jpg' ?>'); background-size: cover; background-position: center; cursor: pointer;"
+                        <div class="card rounded-4 overflow-hidden h-100">
+                            <div style="height: 250px; background-image: url('<?= $product['image_url'] ?? 'placeholder.jpg' ?>'); background-size: cover; background-position: center; cursor: pointer;"
                                 data-bs-toggle="modal" data-bs-target="#productModal" data-id="<?= $product['id'] ?>"
                                 data-name="<?= htmlspecialchars($product['name']) ?>" data-price="<?= $product['price'] ?>"
                                 data-quantity="<?= $product['quantity'] ?>"
@@ -170,80 +171,80 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 
     <!-- Refined Product Modal -->
     <div class="modal fade" id="productModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden; background-color: #f5f2ee;">
-            <!-- Close button -->
-            <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="z-index:10;"></button>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden; background-color: #f5f2ee;">
+                <!-- Close button -->
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="z-index:10;"></button>
 
-            <!-- Top section: image + purchase panel -->
-            <div class="modal-body p-0">
-                <div class="row g-0">
-                    <!-- Product Image -->
-                    <div class="col-md-6 d-flex align-items-center justify-content-center p-4" style="background-color: #f5f2ee;">
-                        <img src="" id="modalImage" class="img-fluid"
-                            style="max-height: 280px; object-fit: contain; border-radius: 16px;">
-                    </div>
+                <!-- Top section: image + purchase panel -->
+                <div class="modal-body p-0">
+                    <div class="row g-0">
+                        <!-- Product Image -->
+                        <div class="col-md-6 d-flex align-items-center justify-content-center p-4" style="background-color: #f5f2ee;">
+                            <img src="" id="modalImage" class="img-fluid"
+                                style="max-height: 280px; object-fit: contain; border-radius: 16px;">
+                        </div>
 
-                    <!-- Right Panel -->
-                    <div class="col-md-6 p-4 d-flex flex-column justify-content-center">
-                        <h2 id="modalName" class="fw-bold text-uppercase mb-3" style="letter-spacing: 1px;"></h2>
+                        <!-- Right Panel -->
+                        <div class="col-md-6 p-4 d-flex flex-column justify-content-center">
+                            <h2 id="modalName" class="display-6 text-uppercase mb-3" style="letter-spacing: 1px;"></h2>
 
-                        <!-- Purchase Box -->
-                        <div class="border rounded-4 p-4 bg-white shadow-sm">
-                            <!-- Price -->
-                            <p class="fw-semibold mb-3" id="modalPrice" style="font-size: 1.1rem;"></p>
+                            <!-- Purchase Box -->
+                            <div class="border rounded-4 p-4 bg-white shadow-sm">
+                                <!-- Price -->
+                                <p class="fw-semibold mb-3" id="modalPrice" style="font-size: 1.1rem;"></p>
 
-                            <!-- Stock info -->
-                            <div id="modalStock" class="mb-3"></div>
+                                <!-- Stock info -->
+                                <div id="modalStock" class="mb-3"></div>
 
-                            <form method="POST" action="add_to_cart.php" id="addToCartForm">
-                                <input type="hidden" name="product_id" id="modalProductId">
+                                <form method="POST" action="add_to_cart.php" id="addToCartForm">
+                                    <input type="hidden" name="product_id" id="modalProductId">
 
-                                <!-- Quantity -->
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between align-items-center border rounded-pill px-4 py-2 bg-white" style="cursor:pointer;">
-                                        <label class="form-label mb-0 fw-medium" style="font-size:0.95rem;">Add quantity</label>
-                                        <input type="number" name="quantity" id="modalQuantity" value="1" min="1" max="99"
-                                            class="border-0 text-end fw-semibold"
-                                            style="width: 60px; outline:none; background:transparent; font-size:0.95rem;">
+                                    <!-- Quantity -->
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center border rounded-pill px-4 py-2 bg-white" style="cursor:pointer;">
+                                            <label class="form-label mb-0 fw-medium" style="font-size:0.95rem;">Add quantity</label>
+                                            <input type="number" name="quantity" id="modalQuantity" value="1" min="1" max="99"
+                                                class="border-0 text-end fw-semibold"
+                                                style="width: 60px; outline:none; background:transparent; font-size:0.95rem;">
+                                        </div>
                                     </div>
-                                </div>
 
-                                <!-- Purchase Button -->
-                                <button type="submit" id="modalAddToCartBtn"
-                                    class="btn w-100 py-3 fw-bold rounded-pill text-white"
-                                    style="background-color: #1a5c2a; font-size: 1rem; letter-spacing: 0.5px;">
-                                    Purchase
-                                </button>
-                            </form>
+                                    <!-- Purchase Button -->
+                                    <button type="submit" id="modalAddToCartBtn"
+                                        class="btn w-100 py-3 fw-bold rounded-pill text-white"
+                                        style="background-color: #1a5c2a; font-size: 1rem; letter-spacing: 0.5px;">
+                                        Purchase
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Bottom section: Your preferences -->
-                <div class="border-top px-4 py-4" style="background-color: #f5f2ee;">
-                    <h5 class="fw-bold mb-3">Your preferences</h5>
-                    <label class="form-label fw-semibold mb-2">Special Instruction</label>
-                    <div class="d-flex align-items-center gap-2">
-                        <input type="text" id="modalNote" class="form-control rounded-pill"
-                            placeholder="I would like to..."
-                            style="max-width: 360px; background: white; border: 1px solid #ccc;">
+                    <!-- Bottom section: Your preferences -->
+                    <div class="border-top px-4 py-4" style="background-color: #f5f2ee;">
+                        <h5 class="fw-bold mb-3">Your preferences</h5>
+                        <label class="form-label fw-semibold mb-2">Special Instruction</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="text" id="modalNote" class="form-control rounded-pill"
+                                placeholder="I would like to..."
+                                style="max-width: 360px; background: white; border: 1px solid #ccc;">
+                        </div>
+                        <div class="mt-2 d-flex gap-2">
+                            <button class="btn btn-secondary rounded-pill px-4 py-1" onclick="document.getElementById('modalNote').value=''">Cancel</button>
+                            <button class="btn rounded-pill px-4 py-1 text-white fw-semibold" style="background-color: #1a5c2a;">Save</button>
+                        </div>
                     </div>
-                    <div class="mt-2 d-flex gap-2">
-                        <button class="btn btn-secondary rounded-pill px-4 py-1" onclick="document.getElementById('modalNote').value=''">Cancel</button>
-                        <button class="btn rounded-pill px-4 py-1 text-white fw-semibold" style="background-color: #1a5c2a;">Save</button>
-                    </div>
-                </div>
 
-                <!-- Disclaimer -->
-                <div class="border-top px-4 py-3" style="background-color: #f5f2ee; font-size: 0.75rem; color: #666;">
-                    Product information or packaging displayed may not be current or complete. Always refer to the physical product for the most accurate information.
-                    <br><em>*Actual weight may vary based on seasonality and other factors. Estimated price is approximate and provided only for reference.</em>
+                    <!-- Disclaimer -->
+                    <div class="border-top px-4 py-3" style="background-color: #f5f2ee; font-size: 0.75rem; color: #666;">
+                        Product information or packaging displayed may not be current or complete. Always refer to the physical product for the most accurate information.
+                        <br><em>*Actual weight may vary based on seasonality and other factors. Estimated price is approximate and provided only for reference.</em>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Bottom Banner -->
     <div class="mb-5 mt-5 px-5">
@@ -385,12 +386,13 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
         <div class="ms-5">Terms</div>
         <div class="ms-5">Conditions</div>
     </div>
+</div>
     <!-- JavaScript to populate modal -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Populate modal when opened
         document.querySelectorAll('[data-bs-toggle="modal"]').forEach(element => {
-            element.addEventListener('click', function () {
+            element.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
                 const name = this.getAttribute('data-name');
                 const price = this.getAttribute('data-price');
@@ -413,7 +415,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                 // Handle image loading with error fallback
                 const modalImg = document.getElementById('modalImage');
                 modalImg.src = image;
-                modalImg.onerror = function () {
+                modalImg.onerror = function() {
                     console.warn('Image failed to load:', image);
                     this.src = '/ECOMM/placeholder.jpg';
                 };
@@ -428,7 +430,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                     const newQtyInput = qtyInput.cloneNode(true);
                     qtyInput.parentNode.replaceChild(newQtyInput, qtyInput);
 
-                    newQtyInput.addEventListener('change', function () {
+                    newQtyInput.addEventListener('change', function() {
                         if (this.value > quantity) {
                             this.value = quantity;
                             alert(`Only ${quantity} items available!`);
