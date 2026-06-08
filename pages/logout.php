@@ -9,6 +9,6 @@ session_start();
 unset($_SESSION["cart"]);
 session_destroy();
 
-header("Location: /ECOMM/index.php");
+header("Location: /Fresh Harvest/index.php");
 exit();
 ?>  

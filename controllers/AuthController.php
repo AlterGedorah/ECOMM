@@ -31,7 +31,7 @@ class AuthController
                 setcookie("user_name", $this->user->name, time() + 60, "/");
                 setcookie("user_role", $this->user->role, time() + 60, "/");
 
-                header("Location: /ECOMM/index.php");
+                header("Location: /Fresh Harvest/index.php");
                 exit();
             } else {
                 return "Email already exists!";
@@ -52,9 +52,9 @@ class AuthController
                 setcookie("user_role", $this->user->role, time() + 60, "/");
 
                 if ($this->user->role == 'admin') {
-                    header("Location: /ECOMM/admin_dashboard.php");
+                    header("Location: /Fresh Harvest/admin_dashboard.php");
                 } else {
-                    header("Location: /ECOMM/index.php");
+                    header("Location: /Fresh Harvest/index.php");
                 }
                 exit();
             } else {
@@ -67,7 +67,7 @@ class AuthController
     public function logout()
     {
         session_destroy();
-        header("Location: /ECOMM/index.php");
+        header("Location: /Fresh Harvest/index.php");
         exit();
     }
 

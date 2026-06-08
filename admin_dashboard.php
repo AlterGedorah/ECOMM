@@ -49,8 +49,8 @@ $products = $productController->adminIndex();
                 <div class="nav flex-column">
                     <a href="#products" class="text-light text-decoration-none py-1">Products</a>
                     <a href="#add" class="text-light text-decoration-none py-1">Add Product</a>
-                    <a href="/ECOMM/index.php" class="text-light text-decoration-none py-1">View Site</a>
-                    <a href="/ECOMM/logout.php" class="text-light text-decoration-none py-1 text-danger">Logout</a>
+                    <a href="/Fresh Harvest/index.php" class="text-light text-decoration-none py-1">View Site</a>
+                    <a href="/Fresh Harvest/logout.php" class="text-light text-decoration-none py-1 text-danger">Logout</a>
                 </div>
             </div>
             
@@ -73,7 +73,7 @@ $products = $productController->adminIndex();
                         <h4 class="mb-0">Add New Product</h4>
                     </div>
                     <div class="card-body">
-                        <form method="POST" enctype="multipart/form-data" action="/ECOMM/admin_dashboard.php">
+                        <form method="POST" enctype="multipart/form-data" action="/Fresh Harvest/admin_dashboard.php">
                             <input type="hidden" name="action" value="create">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -131,7 +131,7 @@ $products = $productController->adminIndex();
                                 <tbody>
                                     <?php foreach ($products as $product): ?>
                                         <tr>
-                                            <form method="POST" enctype="multipart/form-data" action="/ECOMM/admin_dashboard.php">
+                                            <form method="POST" enctype="multipart/form-data" action="/Fresh Harvest/admin_dashboard.php">
                                                 <input type="hidden" name="action" value="update">
                                                 <input type="hidden" name="id" value="<?= $product['id'] ?>">
                                                 
@@ -172,7 +172,7 @@ $products = $productController->adminIndex();
                                                     <button type="submit" class="btn btn-warning btn-sm">✏️ Update</button>
                                             </form>
                                             
-                                            <form method="POST" action="/ECOMM/admin_dashboard.php"
+                                            <form method="POST" action="/Fresh Harvest/admin_dashboard.php"
                                                 style="display: inline-block; margin-left: 5px;"
                                                 onsubmit="return confirm('⚠️ PERMANENT DELETE: <?= htmlspecialchars($product['name']) ?>?')">
                                                 <input type="hidden" name="action" value="delete">

@@ -18,8 +18,6 @@
                 </div>
                 <div class="ms-2"><a href="index.php" class="nav-link text-white">Home</a></div>
                 <div class="ms-4"><a href="products.php" class="nav-link text-white">Products</a></div>
-                <div class="ms-4"><a href="services.php" class="nav-link text-white">Services</a></div>
-                <div class="ms-4"><a href="about.php" class="nav-link text-white">About</a></div>
             </div>
 
             <!-- Right side -->
@@ -61,10 +59,10 @@
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="logout.php">Logout</a></li>
+                            <li><a class="dropdown-item" href="/Fresh Harvest/pages/login.php">Logout</a></li>
                         <?php else: ?>
-                            <li><a class="dropdown-item" href="/ECOMM/pages/login.php">Login</a></li>
-                            <li><a class="dropdown-item" href="/ECOMM/pages/register.php">Register</a></li>
+                            <li><a class="dropdown-item" href="/Fresh Harvest/pages/login.php">Login</a></li>
+                            <li><a class="dropdown-item" href="/Fresh Harvest/pages/register.php">Register</a></li>
                         <?php endif; ?>
                     </ul>
                 </div>

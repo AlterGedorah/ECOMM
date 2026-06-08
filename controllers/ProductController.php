@@ -48,7 +48,7 @@ class ProductController {
                 $_SESSION['flash'] = ['type' => 'danger', 'message' => ' Failed to create product'];
             }
             
-            header("Location: /ECOMM/admin_dashboard.php");
+            header("Location: /Fresh Harvest/admin_dashboard.php");
             exit();
         }
     }
@@ -78,7 +78,7 @@ class ProductController {
                 $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Failed to update product'];
             }
             
-            header("Location: /ECOMM/admin_dashboard.php");
+            header("Location: /Fresh Harvest/admin_dashboard.php");
             exit();
         }
     }
@@ -93,7 +93,7 @@ class ProductController {
                 $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Failed to delete product'];
             }
             
-            header("Location: /ECOMM/admin_dashboard.php");
+            header("Location: /Fresh Harvest/admin_dashboard.php");
             exit();
         }
     }

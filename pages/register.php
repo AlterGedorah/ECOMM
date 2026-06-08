@@ -47,17 +47,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($result->num_rows > 0) {
             $error = "Email already registered!";
         } else {
-
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $role = 'user';
             $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $name, $email, $password, $role);
+            $stmt->bind_param("ssss", $name, $email, $hashed_password, $role);
 
             if ($stmt->execute()) {
                 $_SESSION['user_id'] = $stmt->insert_id;
                 $_SESSION['user_name'] = $name;
                 $_SESSION['user_role'] = 'user';
-                header("Location: /ECOMM/index.php");
-                exit();
+                $success = "Account created successfully! Redirecting...";
+                header("Refresh: 2; url=/Fresh Harvest/index.php");
             } else {
                 $error = "Registration failed!";
             }
@@ -434,23 +434,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     future of global
                     agriculture.</p>
 
+                <?php if ($error): ?>
+                <div style="background:#e07070;color:#fff;padding:10px 12px;border-radius:4px;margin-bottom:16px;font-size:0.85rem;">
+                    <?php echo htmlspecialchars($error); ?>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($success): ?>
+                <div style="background:#5aaa6e;color:#fff;padding:10px 12px;border-radius:4px;margin-bottom:16px;font-size:0.85rem;">
+                    <?php echo htmlspecialchars($success); ?>
+                </div>
+                <?php endif; ?>
+
+                <form method="POST" action="register.php" id="registerForm">
                 <!-- Username -->
                 <div class="mb-field">
                     <label class="field-label" for="username">Username</label>
-                    <input id="username" class="auth-input" type="text" placeholder="" autocomplete="username" />
+                    <input id="username" name="name" class="auth-input" type="text" placeholder="" autocomplete="username" />
                 </div>
 
                 <!-- Email -->
                 <div class="mb-field">
                     <label class="field-label" for="email">Email</label>
-                    <input id="email" class="auth-input" type="email" placeholder="mail@example.com"
+                    <input id="email" name="email" class="auth-input" type="email" placeholder="mail@example.com"
                         autocomplete="email" />
                 </div>
 
                 <!-- Password -->
                 <div class="mb-field">
                     <label class="field-label" for="password">Password</label>
-                    <input id="password" class="auth-input" type="password" placeholder="••••••••"
+                    <input id="password" name="password" class="auth-input" type="password" placeholder="••••••••"
                         autocomplete="new-password" />
                     <div class="strength-bar">
                         <div class="strength-fill" id="strengthFill"></div>
@@ -460,7 +473,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <!-- Confirm Password -->
                 <div>
                     <label class="field-label" for="confirmPassword">Confirm password</label>
-                    <input id="confirmPassword" class="auth-input" type="password" placeholder=""
+                    <input id="confirmPassword" name="confirm_password" class="auth-input" type="password" placeholder=""
                         autocomplete="new-password" />
                 </div>
 
@@ -472,7 +485,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
 
                 <!-- Register btn -->
-                <button class="btn-primary-auth" type="button" id="registerBtn">Register</button>
+                <button class="btn-primary-auth" type="submit" id="registerBtn">Register</button>
+
+                </form>
 
                 <p class="auth-footer">
                     Already have an account?
@@ -498,10 +513,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         passwordInput.addEventListener('input', () => {
             const val = passwordInput.value;
             let score = 0;
-            if (val.length >= 😎            score++;
+            if (val.length >= 6) score++;
             if (/[A-Z]/.test(val)) score++;
             if (/[0-9]/.test(val)) score++;
             if (/[^A-Za-z0-9]/.test(val)) score++;
+            // ensure score is within bounds 0-4
+            score = Math.max(0, Math.min(score, 4));
             const widths = ['0%', '28%', '52%', '76%', '100%'];
             const colors = ['transparent', '#e07070', '#e0b870', '#8ec99a', '#5aaa6e'];
             strengthFill.style.width = widths[score];
@@ -522,7 +539,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             inp.addEventListener('input', () => inp.classList.remove('error'));
         });
 
-        registerBtn.addEventListener('click', () => {
+        document.getElementById('registerForm').addEventListener('submit', (e) => {
             let valid = true;
 
             [usernameInput, emailInput, passwordInput, confirmInput].forEach(inp => {
@@ -540,14 +557,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 valid = false;
             }
 
-            if (valid) {
-                registerBtn.textContent = 'Creating account…';
+            if (!valid) {
+                e.preventDefault();
+            } else {
+                registerBtn.textContent = 'Creating account...';
                 registerBtn.disabled = true;
-                setTimeout(() => {
-                    registerBtn.textContent = 'Register';
-                    registerBtn.disabled = false;
-                    // Redirect or success toast can go here
-                }, 1800);
             }
         });
     </script>
