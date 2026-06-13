@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jun 13, 2026 at 07:14 AM
+-- Generation Time: Jun 13, 2026 at 11:23 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -35,6 +35,8 @@ CREATE TABLE `addresses` (
   `address_type` enum('shipping','billing') DEFAULT 'shipping',
   `address_label` varchar(50) DEFAULT NULL,
   `street_address` varchar(255) NOT NULL,
+  `region` varchar(100) NOT NULL,
+  `city` varchar(100) NOT NULL,
   `barangay` varchar(100) NOT NULL,
   `postal_code` varchar(10) NOT NULL,
   `landmark` varchar(255) DEFAULT NULL,
@@ -145,8 +147,8 @@ CREATE TABLE `products` (
 
 INSERT INTO `products` (`id`, `name`, `category`, `current_price`, `quantity`, `unit`, `image_url`, `created_at`, `harvest_date`, `updated_at`) VALUES
 (2, 'Cucumber', 'vegetables', 35.00, 200, NULL, 'uploads/1777469374_Poster.png', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
-(3, 'Carrot', 'vegetables', 50.00, 97, NULL, 'images/carrot.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
-(4, 'Lettuce', 'vegetables', 60.00, 100, NULL, 'images/lettuce.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
+(3, 'Carrot', 'vegetables', 50.00, 96, NULL, 'images/carrot.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
+(4, 'Lettuce', 'vegetables', 60.00, 98, NULL, 'images/lettuce.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
 (5, 'Broccoli', 'vegetables', 75.00, 100, NULL, 'images/broccoli.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
 (6, 'Bell Pepper', 'vegetables', 45.00, 100, NULL, 'images/bellpepper.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
 (7, 'Apple', 'fruits', 80.00, 100, NULL, 'images/apple.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
@@ -176,6 +178,9 @@ INSERT INTO `products` (`id`, `name`, `category`, `current_price`, `quantity`, `
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
+  `first_name` varchar(120) NOT NULL,
+  `middle_name` varchar(120) NOT NULL,
+  `last_name` varchar(120) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('user','admin') DEFAULT 'user',
@@ -186,18 +191,18 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `created_at`) VALUES
-(1, 'Admin User', 'admin@r3farm.com', 'admin123', 'admin', '2026-04-29 11:03:45'),
-(2, 'Gab', 'gab@gmail.com', '123', 'user', '2026-04-29 11:25:40'),
-(3, 'Rans Ringor', 'rans@sulasok.com', '123', 'user', '2026-04-29 14:09:31'),
-(4, 'ryan', 'ryan@ryan.com', '9MG~2?!TFc?~Ch4', 'user', '2026-04-29 14:51:07'),
-(5, 'asd', 'asd@asd', '9MG~2?!TFc?~Ch4', 'user', '2026-04-29 14:51:59'),
-(6, 'asdasdasd', 'asdasdsass@asdasdsa', '9MG~2?!TFc?~Ch4', 'user', '2026-04-30 01:04:31'),
-(7, 'asd', 'asd@wqe', '9MG~2?!TFc?~Ch4', 'user', '2026-04-30 01:18:17'),
-(8, 'gabbb', 'gbb123@gil.com', '123456', 'user', '2026-04-30 08:53:14'),
-(9, 'tien', 'tien@gmail.com', '$2y$10$q.Y9RpkXdWR56xSpUSghyO.9lr1HWPUZnW7KauJk.i9MapBq2qoOC', 'user', '2026-05-24 06:13:11'),
-(10, 'tien', 'tien@pup.edu', '$2y$10$tPesVRqHjSDDeRuLBF4v4.rSqaOCIrUgISVZQ6R9.H0NrQG2Q3NTy', 'user', '2026-06-08 09:02:51'),
-(11, 'Edward', 'ed@ed.com', '$2y$10$FmED9rjDcQh5Qfh2CYIbcekTgwhfbYpjcnnHxTw0wx0FMo7Sl7C7m', 'user', '2026-06-13 05:08:35');
+INSERT INTO `users` (`id`, `name`, `first_name`, `middle_name`, `last_name`, `email`, `password`, `role`, `created_at`) VALUES
+(1, 'Admin User', '', '', '', 'admin@r3farm.com', 'admin123', 'admin', '2026-04-29 11:03:45'),
+(2, 'Gab', '', '', '', 'gab@gmail.com', '123', 'user', '2026-04-29 11:25:40'),
+(3, 'Rans Ringor', '', '', '', 'rans@sulasok.com', '123', 'user', '2026-04-29 14:09:31'),
+(4, 'ryan', '', '', '', 'ryan@ryan.com', '9MG~2?!TFc?~Ch4', 'user', '2026-04-29 14:51:07'),
+(5, 'asd', '', '', '', 'asd@asd', '9MG~2?!TFc?~Ch4', 'user', '2026-04-29 14:51:59'),
+(6, 'asdasdasd', '', '', '', 'asdasdsass@asdasdsa', '9MG~2?!TFc?~Ch4', 'user', '2026-04-30 01:04:31'),
+(7, 'asd', '', '', '', 'asd@wqe', '9MG~2?!TFc?~Ch4', 'user', '2026-04-30 01:18:17'),
+(8, 'gabbb', '', '', '', 'gbb123@gil.com', '123456', 'user', '2026-04-30 08:53:14'),
+(9, 'tien', '', '', '', 'tien@gmail.com', '$2y$10$q.Y9RpkXdWR56xSpUSghyO.9lr1HWPUZnW7KauJk.i9MapBq2qoOC', 'user', '2026-05-24 06:13:11'),
+(10, 'tien', '', '', '', 'tien@pup.edu', '$2y$10$tPesVRqHjSDDeRuLBF4v4.rSqaOCIrUgISVZQ6R9.H0NrQG2Q3NTy', 'user', '2026-06-08 09:02:51'),
+(11, 'Edward', '', '', '', 'ed@ed.com', '$2y$10$FmED9rjDcQh5Qfh2CYIbcekTgwhfbYpjcnnHxTw0wx0FMo7Sl7C7m', 'user', '2026-06-13 05:08:35');
 
 --
 -- Indexes for dumped tables

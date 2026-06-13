@@ -1,0 +1,282 @@
+<?php
+require_once __DIR__ . '/../config/Database.php';
+
+class Order
+{
+    private $conn;
+    private $orders_table      = "orders";
+    private $items_table       = "order_items";
+    private $history_table     = "order_status_history";
+    private $addresses_table   = "addresses";
+
+    public $id;
+    public $order_number;
+    public $customer_id;
+    public $shipping_address_id;
+    public $billing_address_id;
+    public $order_status;
+    public $payment_status;
+    public $payment_method;
+    public $payment_reference;
+    public $subtotal;
+    public $delivery_fee;
+    public $tax_amount;
+    public $discount_amount;
+    public $total_amount;
+    public $customer_notes;
+    public $admin_notes;
+    public $estimated_delivery_date;
+    public $actual_delivery_date;
+
+    public function __construct()
+    {
+        $database = new Database();
+        $this->conn = $database->getConnection();
+    }
+
+    /**
+     * Generate a unique, human-friendly order number, e.g. R3F-20260613-AB12CD
+     */
+    public static function generateOrderNumber(): string
+    {
+        $date    = date('Ymd');
+        $random  = strtoupper(bin2hex(random_bytes(3)));
+        return "R3F-{$date}-{$random}";
+    }
+
+    /**
+     * Persist a complete order in a single transaction.
+     *
+     * @param int   $userId
+     * @param array $cartItems  Associative array: product_id => quantity
+     * @param array $productLookup  ['id' => ['id'=>..,'name'=>..,'price'=>..,'quantity'=>..]]
+     * @param array $address    [first_name,last_name,phone,street,barangay,city,province,postal_code,landmark]
+     * @param array $payment    [method, shipping_fee, discount, notes]
+     * @return array            ['success'=>bool,'order_id'=>?,'order_number'=>?,'error'=>?]
+     */
+    public function placeOrder(int $userId, array $cartItems, array $productLookup, array $address, array $payment): array
+    {
+        $this->conn->begin_transaction();
+        try {
+            // 1. Insert / reuse shipping address
+            $addressId = $this->saveAddress($userId, $address);
+            if (!$addressId) {
+                throw new Exception("Could not save shipping address.");
+            }
+
+            // 2. Compute totals from the provided product snapshot
+            $subtotal  = 0.0;
+            $lineItems = [];
+            foreach ($cartItems as $productId => $qty) {
+                if (!isset($productLookup[$productId])) {
+                    throw new Exception("Product {$productId} no longer exists.");
+                }
+                $p   = $productLookup[$productId];
+                $row = [
+                    'product_id'    => (int)$p['id'],
+                    'product_name'  => $p['name'],
+                    'price_per_unit'=> (float)$p['price'],
+                    'quantity'      => (int)$qty,
+                ];
+                $row['total_price'] = $row['price_per_unit'] * $row['quantity'];
+                $subtotal += $row['total_price'];
+                $lineItems[] = $row;
+            }
+
+            $shippingFee   = (float)($payment['shipping_fee']   ?? 0);
+            $discount      = (float)($payment['discount']       ?? 0);
+            $totalAmount   = max(0, $subtotal + $shippingFee - $discount);
+
+            // 3. Create order header
+            $orderNumber   = self::generateOrderNumber();
+            $paymentMethod = $this->mapPaymentMethod($payment['method'] ?? 'cod');
+
+            $sql = <<<SQL
+INSERT INTO {$this->orders_table}
+    (order_number, customer_id, shipping_address_id, billing_address_id,
+     order_status, payment_status, payment_method,
+     subtotal, delivery_fee, tax_amount, discount_amount, total_amount,
+     customer_notes, estimated_delivery_date)
+VALUES (?, ?, ?, NULL, 'pending', 'unpaid', ?, ?, ?, ?, ?, ?, ?, ?)
+SQL;
+            $stmt = $this->conn->prepare($sql);
+            $eta = date('Y-m-d', strtotime('+3 business days'));
+            // Normalize values into variables so they can be passed by reference to bind_param
+            $notes = $payment['notes'] ?? null;
+            $taxAmount = 0.0; // no tax calculation for now
+            $types = "siisdddddss"; // order_number(s), customer_id(i), shipping_address_id(i), payment_method(s), subtotal(d), delivery_fee(d), tax_amount(d), discount_amount(d), total_amount(d), customer_notes(s), eta(s)
+            $stmt->bind_param(
+                $types,
+                $orderNumber,
+                $userId,
+                $addressId,
+                $paymentMethod,
+                $subtotal,
+                $shippingFee,
+                $taxAmount,
+                $discount,
+                $totalAmount,
+                $notes,
+                $eta
+            );
+            if (!$stmt->execute()) {
+                throw new Exception("Could not create order: " . $stmt->error);
+            }
+            $orderId = $stmt->insert_id;
+            $stmt->close();
+
+            // 4. Insert order items + decrement stock
+            $itemSql = <<<SQL
+INSERT INTO {$this->items_table}
+    (order_id, product_id, product_name, quantity, price_per_unit)
+VALUES (?, ?, ?, ?, ?)
+SQL;
+            $itemStmt = $this->conn->prepare($itemSql);
+            $stockStmt = $this->conn->prepare("
+                UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?
+            ");
+
+            foreach ($lineItems as $li) {
+                // Bind into variables in the correct order: order_id, product_id, product_name, quantity, price
+                $prodId   = $li['product_id'];
+                $prodName = $li['product_name'];
+                $qty      = $li['quantity'];
+                $ppu      = $li['price_per_unit'];
+                $itemStmt->bind_param(
+                    "iisid",
+                    $orderId,
+                    $prodId,
+                    $prodName,
+                    $qty,
+                    $ppu
+                );
+                if (!$itemStmt->execute()) {
+                    throw new Exception("Could not save order item: " . $itemStmt->error);
+                }
+
+                $stockStmt->bind_param("iii", $qty, $prodId, $qty);
+                if (!$stockStmt->execute() || $this->conn->affected_rows === 0) {
+                    throw new Exception("Insufficient stock for {$prodName}.");
+                }
+            }
+            $itemStmt->close();
+            $stockStmt->close();
+
+            // 5. Log initial status
+            $histStmt = $this->conn->prepare("
+                INSERT INTO {$this->history_table} (order_id, status, notes, changed_by)
+                VALUES (?, 'pending', 'Order placed', ?)
+            ");
+            $histStmt->bind_param("ii", $orderId, $userId);
+            $histStmt->execute();
+            $histStmt->close();
+
+            $this->conn->commit();
+            return [
+                'success'      => true,
+                'order_id'     => $orderId,
+                'order_number' => $orderNumber,
+                'total_amount' => $totalAmount,
+            ];
+        } catch (Exception $e) {
+            $this->conn->rollback();
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Save or reuse a shipping address for the user.
+     */
+    private function saveAddress(int $userId, array $a): ?int
+    {
+        $street     = trim($a['street']     ?? '');
+        $barangay   = trim($a['barangay']   ?? '');
+        $city       = trim($a['city']       ?? '');
+        $province   = trim($a['province']   ?? '');
+        $postal     = trim($a['postal_code']?? '');
+        $fullStreet = trim("{$street}, {$barangay}, {$city}, {$province}", ', ');
+
+        $stmt = $this->conn->prepare("
+            INSERT INTO {$this->addresses_table}
+                (user_id, address_type, address_label, street_address, barangay, postal_code, landmark, is_default_shipping)
+            VALUES (?, 'shipping', 'Home', ?, ?, ?, ?, 1)
+        ");
+        $landmark = $a['landmark'] ?? null;
+        $stmt->bind_param("issss", $userId, $fullStreet, $barangay, $postal, $landmark);
+        if (!$stmt->execute()) {
+            return null;
+        }
+        $newId = $stmt->insert_id;
+        $stmt->close();
+        return $newId;
+    }
+
+    /**
+     * Normalize the payment method string into the values accepted by the orders table.
+     */
+    private function mapPaymentMethod(string $method): string
+    {
+        $method = strtolower(trim($method));
+        $map = [
+            'card'  => 'credit_card',
+            'gcash' => 'gcash',
+            'maya'  => 'maya',
+            'bank'  => 'bank_transfer',
+            'cod'   => 'cash_on_delivery',
+        ];
+        return $map[$method] ?? 'cash_on_delivery';
+    }
+
+    /**
+     * Get all orders for a given user, newest first.
+     */
+    public function getOrdersByUser(int $userId): array
+    {
+        $stmt = $this->conn->prepare("
+            SELECT o.*, a.street_address, a.barangay
+            FROM {$this->orders_table} o
+            LEFT JOIN {$this->addresses_table} a ON o.shipping_address_id = a.id
+            WHERE o.customer_id = ?
+            ORDER BY o.created_at DESC
+        ");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $res  = $stmt->get_result();
+        $rows = [];
+        while ($r = $res->fetch_assoc()) {
+            $rows[] = $r;
+        }
+        $stmt->close();
+        return $rows;
+    }
+
+    /**
+     * Get full order with line items.
+     */
+    public function getOrderWithItems(int $orderId, int $userId): ?array
+    {
+        $stmt = $this->conn->prepare("
+            SELECT o.*, a.street_address, a.barangay, a.postal_code, a.landmark
+            FROM {$this->orders_table} o
+            LEFT JOIN {$this->addresses_table} a ON o.shipping_address_id = a.id
+            WHERE o.id = ? AND o.customer_id = ?
+        ");
+        $stmt->bind_param("ii", $orderId, $userId);
+        $stmt->execute();
+        $order = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$order) {
+            return null;
+        }
+
+        $itemStmt = $this->conn->prepare("SELECT * FROM {$this->items_table} WHERE order_id = ?");
+        $itemStmt->bind_param("i", $orderId);
+        $itemStmt->execute();
+        $items = $itemStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $itemStmt->close();
+
+        $order['items'] = $items;
+        return $order;
+    }
+}
+?>

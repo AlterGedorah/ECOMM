@@ -1,0 +1,144 @@
+:root {
+  --green-dark: #1e3d30;
+  --green-mid: #2c5443;
+  --green-accent: #6c9e75;
+  --bg-light: #f9f8f6;
+}
+
+body {
+  background-color: #f5f2ea;
+}
+
+/* ── Sidebar ── */
+#sidebar {
+  width: 280px;
+  min-width: 280px;
+  background-color: #1e3028;
+  min-height: 100vh;
+}
+
+.avatar-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fff
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231e3d30"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>')
+    center/70% no-repeat;
+  flex-shrink: 0;
+}
+
+.nav-link-side {
+  color: rgba(255, 255, 255, 0.75);
+  padding: 0.7rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.nav-link-side:hover {
+  color: #fff;
+  padding-left: 1.1rem;
+}
+.nav-link-side.active {
+  color: var(--green-accent);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* ── Content ── */
+.content-header h2 {
+  color: var(--green-dark);
+}
+
+/* keep Bootstrap cards slightly softer */
+.card {
+  border-radius: 12px;
+  border-color: #e2e8f0;
+}
+
+/* inline-edit row */
+.input-underline {
+  border: none;
+  border-bottom: 1px solid #dee2e6;
+  outline: none;
+  background: transparent;
+  font-size: 0.9rem;
+  padding: 6px 0;
+  flex: 1;
+}
+
+/* avatar upload zone */
+.upload-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 1px solid #dee2e6;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23aaa"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>')
+    center/50% no-repeat;
+}
+
+/* payment cards */
+.payment-tile {
+  width: 200px;
+  height: 120px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+}
+.payment-tile.selected {
+  border-color: #0d6efd;
+}
+.payment-tile.add-tile {
+  border-style: dashed;
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.gcash-badge {
+  background: #1775e1;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 10px 28px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+/* purchase sub-tabs */
+.sub-tab-nav .nav-link {
+  font-size: 0.82rem;
+  color: #555;
+  white-space: nowrap;
+  border-radius: 0;
+}
+.sub-tab-nav .nav-link.active {
+  color: var(--green-accent);
+  border-bottom: 2px solid var(--green-accent);
+  font-weight: 600;
+  background: transparent;
+}
+
+/* btn overrides */
+.btn-farm {
+  background: var(--green-mid);
+  color: #fff;
+  border: none;
+}
+.btn-farm:hover {
+  background: var(--green-dark);
+  color: #fff;
+}
+.btn-farm-dark {
+  background: var(--green-dark);
+  color: #fff;
+  border: none;
+}
+.btn-farm-dark:hover {
+  background: #162d24;
+  color: #fff;
+}

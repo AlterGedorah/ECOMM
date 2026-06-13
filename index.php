@@ -217,7 +217,13 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                                             >
                                             Add to Cart
                                     </button>
-                                    <button href='#' id="modalAddToCartBtn"
+                                </form>
+
+                                <!-- Buy-Now form (posts straight to buy_now.php, which seeds the cart and redirects to checkout) -->
+                                <form method="POST" action="buy_now.php" id="buyNowForm">
+                                    <input type="hidden" name="product_id" id="buyNowProductId">
+                                    <input type="hidden" name="quantity"   id="buyNowQuantity" value="1">
+                                    <button type="submit" id="modalBuyNowBtn"
                                         class="btn w-100 py-3 fw-bold rounded-pill text-white"
                                         style="background-color: #1a5c2a; font-size: 1rem; letter-spacing: 0.5px;">
                                         Purchase
@@ -468,6 +474,12 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                         addToCartBtn.classList.add('btn-secondary');
                     }
                 }
+
+                    // Also populate buy-now hidden inputs
+                    const buyNowProductId = document.getElementById('buyNowProductId');
+                    const buyNowQuantity  = document.getElementById('buyNowQuantity');
+                    if (buyNowProductId) buyNowProductId.value = id;
+                    if (buyNowQuantity) buyNowQuantity.value = document.getElementById('modalQuantity')?.value || 1;
             });
         });
     </script>
