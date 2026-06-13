@@ -60,8 +60,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
                     <ul class="dropdown-menu">
                         <?php if (isset($_COOKIE['user_id'])): ?>
-                            <li><a class="dropdown-item" href="profile.php">My Profile</a></li>
-                            <li><a class="dropdown-item" href="orders.php">My Orders</a></li>
+                            <li><a class="dropdown-item" href="profile.php">My Profile</a></li>  
                             <?php if (($_SESSION['user_role'] ?? null) === 'admin'): ?>
                                 <li><a class="dropdown-item" href="admin_dashboard.php">Admin Panel</a></li>
                             <?php endif; ?>
