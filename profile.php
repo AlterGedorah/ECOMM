@@ -42,7 +42,7 @@ if ($order_result->num_rows > 0) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Profile - R3 Farm</title>
+    <title>My Profile - Fresh Harvest</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>

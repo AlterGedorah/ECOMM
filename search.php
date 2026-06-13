@@ -33,7 +33,7 @@ if (!empty($search)) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Search Results - R3 Farm</title>
+    <title>Search Results - Fresh Harvest</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>

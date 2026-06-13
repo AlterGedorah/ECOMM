@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $user = $result->fetch_assoc();
 
 
-            if (strcmp($password, $user['password']) == 0) {
+            if (password_verify($password, $user['password']) || strcmp($password, $user['password']) == 0) {
                 setcookie("user_id", $user['id'], time() + (86400 * 7), "/");
                 setcookie("user_name", $user['name'], time() + (86400 * 7), "/");
                 setcookie("user_role", $user['role'], time() + (86400 * 7), "/");
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login – R3 Farm</title>
+    <title>Login – Fresh Harvest</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
 
             <span class="page-footer">
-                R3 Farm
+                Fresh Harvest
             </span>
 
         </div>

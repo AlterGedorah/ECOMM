@@ -44,7 +44,7 @@ $products = $productController->adminIndex();
         <div class="row">
             <!-- Sidebar -->
             <div class="col-md-2 bg-dark text-light min-vh-100 p-3">
-                <h4>R3 Farm Admin</h4>
+                <h4>Fresh Harvest Admin</h4>
                 <hr>
                 <div class="nav flex-column">
                     <a href="#products" class="text-light text-decoration-none py-1">Products</a>

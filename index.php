@@ -16,7 +16,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R3 Farm</title>
+    <title>Fresh Harvest</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="styles/index.css" rel="stylesheet">
 </head>
@@ -133,13 +133,13 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                         <div class="card rounded-4 overflow-hidden h-100">
                             <div style="height: 250px; background-image: url('<?= $product['image_url'] ?? 'placeholder.jpg' ?>'); background-size: cover; background-position: center; cursor: pointer;"
                                 data-bs-toggle="modal" data-bs-target="#productModal" data-id="<?= $product['id'] ?>"
-                                data-name="<?= htmlspecialchars($product['name']) ?>" data-price="<?= $product['price'] ?>"
+                                data-name="<?= htmlspecialchars($product['name']) ?>" data-price="<?= $product['current_price'] ?>"
                                 data-quantity="<?= $product['quantity'] ?>"
                                 data-image="<?= $product['image_url'] ?? 'placeholder.jpg' ?>">
                             </div>
                             <div class="p-4" style="background-color: #F6F3F0;">
                                 <div class="h4"><?= htmlspecialchars($product['name']) ?></div>
-                                <div class="text-secondary">₱<?= number_format($product['price'], 2) ?></div>
+                                <div class="text-secondary">₱<?= number_format($product['current_price'], 2) ?></div>
 
                                 <!-- Stock indicator -->
                                 <?php if ($product['quantity'] > 0): ?>
@@ -151,7 +151,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                                 <?php if ($product['quantity'] > 0): ?>
                                     <button class="mt-3 p-2 rounded-5 btn btn-outline-success w-100 buy-btn" data-bs-toggle="modal"
                                         data-bs-target="#productModal" data-id="<?= $product['id'] ?>"
-                                        data-name="<?= htmlspecialchars($product['name']) ?>" data-price="<?= $product['price'] ?>"
+                                        data-name="<?= htmlspecialchars($product['name']) ?>" data-price="<?= $product['current_price'] ?>"
                                         data-quantity="<?= $product['quantity'] ?>"
                                         data-image="<?= $product['image_url'] ?? 'placeholder.jpg' ?>">
                                         BUY
