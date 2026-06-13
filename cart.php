@@ -1,6 +1,6 @@
 <?php
 session_set_cookie_params(0);
-session_start();    
+session_start();
 require_once 'models/Cart.php';
 require_once 'models/Product.php';
 
@@ -77,7 +77,7 @@ foreach ($cart_items as $id => $qty) {
         $stock_status = ($product_model->quantity >= $qty) ? 'sufficient' : 'insufficient';
         if ($stock_status == 'insufficient') {
             $has_insufficient = true;
-        }   
+        }
 
         $subtotal = $product_model->price * $qty;
         $total += $subtotal;
@@ -109,7 +109,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 
 <body>
     <div class="container mt-5 pt-1">
-        <?php include('components/navbar.comp.php')?>
+        <?php include('components/navbar.comp.php') ?>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Shopping Cart</h2>
             <a href="index.php" class="btn btn-outline-success">← Continue Shopping</a>
@@ -186,7 +186,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 
                 <div class="col-md-4">
                     <div class="card">
-                        <div class="card-header bg-success text-white">
+                        <div class="card-header text-white" style="background-color: #2f4a3a;">
                             <h5>Order Summary</h5>
                         </div>
                         <div class="card-body">
@@ -203,12 +203,11 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                                     Checkout Unavailable
                                 </button>
                             <?php else: ?>
-                                <form method="POST">
-                                    <button type="submit" name="checkout" class="btn btn-success w-100 mt-3"
-                                        onclick="return confirm('Confirm your order? Stock will be deducted.')">
-                                        Proceed to Checkout
-                                    </button>
-                                </form>
+
+                                <a href="checkout.php"><button name="checkout" class="btn w-100 mt-3 text-white" style="background-color: #2f4a3a;">
+                                    Proceed to Checkout
+                                </button></a>
+
                             <?php endif; ?>
                         </div>
                     </div>

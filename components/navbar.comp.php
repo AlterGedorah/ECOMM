@@ -3,7 +3,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 ?>
 <!-- Nav bar -->
-<nav class="fixed-top p-3 shadow-lg px-4" style="background-color: #385144;">
+<nav class="fixed-top p-3 shadow-lg px-4 mb-0" style="background-color: #1E3028;">
     <div class="container-fluid">
         <div class="row w-100 align-items-center">
             <!-- Logo and nav links -->

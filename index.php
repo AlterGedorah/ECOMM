@@ -27,7 +27,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
     <?php include 'components/navbar.comp.php'; ?>
 
     <!-- Hero section (same) -->
-    <div class="banner container text-light mt-5 overflow-hidden">
+    <div class="banner container text-light p-4 overflow-hidden">
         <img src="images/Poster.png" alt="Hero" class="img-fluid w-100 h-80" object-position: center;>
     </div>
 

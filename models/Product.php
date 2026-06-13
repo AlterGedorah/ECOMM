@@ -35,7 +35,7 @@ class Product {
             $this->id = $row['id'];
             $this->name = $row['name'];
             $this->category = $row['category'];
-            $this->price = $row['price'];
+            $this->current_price = $row['price'];
             $this->quantity = $row['quantity']; 
             $this->image_url = $row['image_url'];
             $this->created_at = $row['created_at'];

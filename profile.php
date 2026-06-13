@@ -47,13 +47,13 @@ $member_time = date('g:i A', strtotime($user['created_at']));
             --bg-light:     #f9f8f6;
         }
 
-        body { background-color: var(--bg-light); }
+        body { background-color: #f5f2ea }
 
         /* ── Sidebar ── */
         #sidebar {
             width: 280px;
             min-width: 280px;
-            background-color: var(--green-dark);
+            background-color: #1E3028;
             min-height: 100vh;
         }
 
