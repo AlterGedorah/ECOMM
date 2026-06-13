@@ -1,3 +1,7 @@
+<?php
+$current_page = basename($_SERVER['PHP_SELF']);
+
+?>
 <!-- Nav bar -->
 <nav class="fixed-top p-3 shadow-lg px-4" style="background-color: #385144;">
     <div class="container-fluid">
@@ -39,6 +43,9 @@
                 </form>
 
                 <div class="dropdown me-4">
+                    <?php if($current_page === 'cart.php'): ?>
+
+                    <?php else: ?>
                     <a href="#" class="nav-link text-white" data-bs-toggle="dropdown">
                         <svg width="15" height="22" viewBox="0 0 15 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
@@ -49,11 +56,13 @@
                                 fill="white" />
                         </svg>
                     </a>
+                    <?php endif; ?>
+
                     <ul class="dropdown-menu">
                         <?php if (isset($_COOKIE['user_id'])): ?>
                             <li><a class="dropdown-item" href="profile.php">My Profile</a></li>
                             <li><a class="dropdown-item" href="orders.php">My Orders</a></li>
-                            <?php if (($_COOKIE['user_role'] ?? null) === 'admin'): ?>
+                            <?php if (($_SESSION['user_role'] ?? null) === 'admin'): ?>
                                 <li><a class="dropdown-item" href="admin_dashboard.php">Admin Panel</a></li>
                             <?php endif; ?>
                             <li>

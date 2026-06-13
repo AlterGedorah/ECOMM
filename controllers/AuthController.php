@@ -7,18 +7,24 @@ class AuthController
 
     public function __construct()
     {
+        // Start session safely if not running yet
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         $this->user = new User();
     }
+
     public function user() {
-    if (isset($_COOKIE['user_id'])) {
-        return [
-            'id' => $_COOKIE['user_id'],
-            'name' => $_COOKIE['user_name'],
-            'role' => $_COOKIE['user_role']
-        ];
+        if (isset($_SESSION['user_id'])) {
+            return [
+                'id' => $_SESSION['user_id'],
+                'name' => $_SESSION['user_name'],
+                'role' => $_SESSION['user_role']
+            ];
+        }
+        return null;
     }
-    return null;
-}
+
     public function register()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -27,9 +33,10 @@ class AuthController
             $this->user->password = $_POST['password'];
 
             if ($this->user->register()) {
-                setcookie("user_id", $this->user->id, time() + 60, "/");
-                setcookie("user_name", $this->user->name, time() + 60, "/");
-                setcookie("user_role", $this->user->role, time() + 60, "/");
+                // Save state to secure server session
+                $_SESSION['user_id'] = $this->user->id;
+                $_SESSION['user_name'] = $this->user->name;
+                $_SESSION['user_role'] = $this->user->role;
 
                 header("Location: /Fresh Harvest/index.php");
                 exit();
@@ -47,11 +54,12 @@ class AuthController
             $this->user->password = $_POST['password'];
 
             if ($this->user->login()) {
-                setcookie("user_id", $this->user->id, time() + 60, "/"); // 1 hour
-                setcookie("user_name", $this->user->name, time() + 60, "/");
-                setcookie("user_role", $this->user->role, time() + 60, "/");
+                // Save state to secure server session
+                $_SESSION['user_id'] = $this->user->id;
+                $_SESSION['user_name'] = $this->user->name;
+                $_SESSION['user_role'] = $this->user->role;
 
-                if ($this->user->role == 'admin') {
+                if ($_SESSION['user_role'] === 'admin') {
                     header("Location: /Fresh Harvest/admin_dashboard.php");
                 } else {
                     header("Location: /Fresh Harvest/index.php");
@@ -66,19 +74,31 @@ class AuthController
 
     public function logout()
     {
+        // Clear all session memory keys
+        $_SESSION = [];
+        
+        // Destroy actual session storage unit
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
         session_destroy();
+        
         header("Location: /Fresh Harvest/index.php");
         exit();
     }
 
     public function isLoggedIn()
     {
-        return isset($_COOKIE['user_id']);
+        return isset($_SESSION['user_id']);
     }
 
     public function isAdmin()
     {
-        return isset($_COOKIE['user_role']) && $_COOKIE['user_role'] === 'admin';
+        return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
     }
 }
 ?>

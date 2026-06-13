@@ -1,0 +1,16 @@
+body {
+  padding-top: 80px;
+}
+
+.nav-link {
+  color: white !important;
+  transition: opacity 0.3s ease;
+}
+
+.nav-link:hover {
+  opacity: 0.8;
+}
+
+.dropdown-menu {
+  margin-top: 10px;
+}

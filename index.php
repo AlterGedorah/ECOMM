@@ -19,6 +19,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
     <title>Fresh Harvest</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="styles/index.css" rel="stylesheet">
+    <link rel="icon" href="images/icon.png">
 </head>
 
 <body>
@@ -212,6 +213,11 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 
                                     <!-- Purchase Button -->
                                     <button type="submit" id="modalAddToCartBtn"
+                                        class="btn w-100 py-3 fw-bold rounded-pill text-black mb-2"
+                                            >
+                                            Add to Cart
+                                    </button>
+                                    <button href='#' id="modalAddToCartBtn"
                                         class="btn w-100 py-3 fw-bold rounded-pill text-white"
                                         style="background-color: #1a5c2a; font-size: 1rem; letter-spacing: 0.5px;">
                                         Purchase

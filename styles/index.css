@@ -1,12 +1,20 @@
 .banner {
-  margin-top: 6rem !important;
+    margin-top: 6rem !important;
 }
 
 .Background {
-  background-image: url('../images/Background.png');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
-  background-attachment: scroll;
-  min-height: 100vh;
+    background-image: url("../images/Background.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    background-attachment: scroll;
+    min-height: 100vh;
+}
+
+#modalAddToCartBtn {
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    background: #FFFFFF;
+    border: 1px solid #00680A;
+    border-radius: 20px;
 }

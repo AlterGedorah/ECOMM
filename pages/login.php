@@ -60,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="../styles/login.css">
+    <link rel="icon" href="images/icon.png">
 
     
 </head>

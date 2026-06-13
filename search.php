@@ -35,6 +35,7 @@ if (!empty($search)) {
 <head>
     <title>Search Results - Fresh Harvest</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="images/icon.png">
 </head>
 <body>
     <div class="container mt-5">
