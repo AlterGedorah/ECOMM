@@ -19,6 +19,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
     <title>Fresh Harvest</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="styles/index.css" rel="stylesheet">
+    <link href="styles/cookie.css" rel="stylesheet">
     <link rel="icon" href="images/icon.png">
 </head>
 
@@ -483,5 +484,9 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
             });
         });
     </script>
+
+    <!-- Cookie consent banner -->
+    <?php include __DIR__ . '/components/cookie/cookie-banner.php'; ?>
+    <script src="scripts/cookie-consent.js"></script>
 
 </html>
