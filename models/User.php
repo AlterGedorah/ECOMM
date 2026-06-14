@@ -7,7 +7,11 @@ class User {
     
     public $id;
     public $name;
+    public $first_name;
+    public $middle_name;
+    public $last_name;
     public $email;
+    public $phone_num;
     public $password; // Plain text
     public $role;
     
@@ -40,7 +44,7 @@ class User {
     
     public function login() {
         // Direct comparison of plain text
-        $stmt = $this->conn->prepare("SELECT id, name, email, password, role FROM {$this->table} WHERE email = ? AND password = ?");
+        $stmt = $this->conn->prepare("SELECT id, name, first_name, middle_name, last_name, email, phone_num, password, role FROM {$this->table} WHERE email = ? AND password = ?");
         $stmt->bind_param("ss", $this->email, $this->password);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -49,7 +53,11 @@ class User {
             $row = $result->fetch_assoc();
             $this->id = $row['id'];
             $this->name = $row['name'];
+            $this->first_name = $row['first_name'] ?? null;
+            $this->middle_name = $row['middle_name'] ?? null;
+            $this->last_name = $row['last_name'] ?? null;
             $this->email = $row['email'];
+            $this->phone_num = $row['phone_num'] ?? null;
             $this->role = $row['role'];
             return true;
         }

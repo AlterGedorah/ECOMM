@@ -1,7 +1,41 @@
 <?php
+session_start();
 require_once '../config/Database.php';
 
 $error = null;
+
+function buildFullName(?string $firstName, ?string $middleName, ?string $lastName): string
+{
+    $parts = [];
+
+    $firstName = trim((string) $firstName);
+    $middleName = trim((string) $middleName);
+    $lastName = trim((string) $lastName);
+
+    if ($firstName !== '') {
+        $parts[] = $firstName;
+    }
+
+    if ($middleName !== '') {
+        $parts[] = $middleName;
+    }
+
+    if ($lastName !== '') {
+        $parts[] = $lastName;
+    }
+
+    return trim(implode(' ', $parts));
+}
+
+function syncUserCookie(string $name, string $value, bool $persist = true): void
+{
+    if ($persist && $value !== '') {
+        setcookie($name, $value, time() + (86400 * 7), "/");
+        return;
+    }
+
+    setcookie($name, '', time() - 3600, "/");
+}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = trim($_POST['email']);
@@ -16,19 +50,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $database = new Database();
         $conn = $database->getConnection();
 
-        $stmt = $conn->prepare("SELECT id, name, email, password, role FROM users WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id, name, first_name, middle_name, last_name, email, phone_num, password, role FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($result->num_rows == 1) {
             $user = $result->fetch_assoc();
+            $fullName = buildFullName($user['first_name'] ?? '', $user['middle_name'] ?? '', $user['last_name'] ?? '');
+            if ($fullName === '') {
+                $fullName = trim((string) ($user['name'] ?? ''));
+            }
 
 
             if (password_verify($password, $user['password']) || strcmp($password, $user['password']) == 0) {
                 setcookie("user_id", $user['id'], time() + (86400 * 7), "/");
-                setcookie("user_name", $user['name'], time() + (86400 * 7), "/");
+                syncUserCookie("user_name", $fullName);
                 setcookie("user_role", $user['role'], time() + (86400 * 7), "/");
+
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_name'] = $fullName;
+                $_SESSION['user_first_name'] = $user['first_name'] ?? '';
+                $_SESSION['user_middle_name'] = $user['middle_name'] ?? '';
+                $_SESSION['user_last_name'] = $user['last_name'] ?? '';
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['user_phone_num'] = $user['phone_num'] ?? null;
+                $_SESSION['user_role'] = $user['role'];
+
+                syncUserCookie("user_first_name", $user['first_name'] ?? '', $fullName !== '');
+                syncUserCookie("user_middle_name", $user['middle_name'] ?? '', $fullName !== '');
+                syncUserCookie("user_last_name", $user['last_name'] ?? '', $fullName !== '');
+                syncUserCookie("user_phone_num", isset($user['phone_num']) && $user['phone_num'] !== null ? (string) $user['phone_num'] : '', isset($user['phone_num']) && $user['phone_num'] !== null);
 
                 if ($user['role'] == 'admin') {
                     header("Location: ../admin_dashboard.php");

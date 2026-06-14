@@ -99,6 +99,43 @@ body {
   font-size: 0.85rem;
 }
 
+/* ── Purchase / Sub-tabs ── */
+.sub-tab-nav .sub-tab {
+  color: #6b7280;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0;
+}
+.sub-tab-nav .sub-tab:hover {
+  color: var(--green-dark);
+}
+.sub-tab-nav .sub-tab.active {
+  color: var(--green-dark);
+  border-bottom-color: var(--green-accent) !important;
+  font-weight: 600;
+}
+
+/* ── Order Card ── */
+.order-card {
+  border-color: #e5e7eb;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.order-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: var(--green-accent);
+}
+.order-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: #f3f4f6
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23999"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 16H6c-.55 0-1-.45-1-1V6c0-.55.45-1 1-1h12c.55 0 1 .45 1 1v12c0 .55-.45 1-1 1zm-4-7l-3 4-2-3-3 4h12l-4-5z"/></svg>')
+    center/60% no-repeat;
+  flex-shrink: 0;
+}
+
 .gcash-badge {
   background: #1775e1;
   color: #fff;

@@ -102,6 +102,7 @@ $stmt->close();
             </div>
             <?php if (!empty($user_addresses)): ?>
               <input type="hidden" name="address_id" value="<?= (int) $user_addresses[0]['id'] ?>" />
+              
               <?php foreach ($user_addresses as $addr): ?>
                 <div class="border rounded p-3 bg-white">
                   <div class="d-flex justify-content-between align-items-start gap-3">
@@ -177,37 +178,37 @@ $stmt->close();
                 </div>
               </div>
 
-              
-          <?php endif; ?>
-          <div class="divider mt-4"></div>
-              <p class="section-title mb-2" style="font-size:.88rem;">Shipping method</p>
 
-              <label class="ship-option chosen" id="ship-std">
-                <input type="radio" name="shipping" value="standard" checked
-                  onchange="pickShipping(this,'ship-std','49')" />
-                <div>
-                  <div class="ship-name"><i class="bi bi-box-seam me-1 text-accent"></i>Standard delivery</div>
-                  <div class="ship-sub">3–5 business days</div>
-                </div>
-                <span class="ship-price">₱49</span>
-              </label>
-              <label class="ship-option" id="ship-exp">
-                <input type="radio" name="shipping" value="express" onchange="pickShipping(this,'ship-exp','99')" />
-                <div>
-                  <div class="ship-name"><i class="bi bi-lightning me-1 text-accent"></i>Express delivery</div>
-                  <div class="ship-sub">Next business day</div>
-                </div>
-                <span class="ship-price">₱99</span>
-              </label>
-              <label class="ship-option" id="ship-free">
-                <input type="radio" name="shipping" value="free" onchange="pickShipping(this,'ship-free','0')" />
-                <div>
-                  <div class="ship-name"><i class="bi bi-gift me-1 text-accent"></i>Free pickup (store)</div>
-                  <div class="ship-sub">Available in 2 hours</div>
-                </div>
-                <span class="ship-price text-success">Free</span>
-              </label>
-            </div>
+            <?php endif; ?>
+            <div class="divider mt-4"></div>
+            <p class="section-title mb-2" style="font-size:.88rem;">Shipping method</p>
+
+            <label class="ship-option chosen" id="ship-std">
+              <input type="radio" name="shipping" value="standard" checked
+                onchange="pickShipping(this,'ship-std','49')" />
+              <div>
+                <div class="ship-name"><i class="bi bi-box-seam me-1 text-accent"></i>Standard delivery</div>
+                <div class="ship-sub">3–5 business days</div>
+              </div>
+              <span class="ship-price">₱49</span>
+            </label>
+            <label class="ship-option" id="ship-exp">
+              <input type="radio" name="shipping" value="express" onchange="pickShipping(this,'ship-exp','99')" />
+              <div>
+                <div class="ship-name"><i class="bi bi-lightning me-1 text-accent"></i>Express delivery</div>
+                <div class="ship-sub">Next business day</div>
+              </div>
+              <span class="ship-price">₱99</span>
+            </label>
+            <label class="ship-option" id="ship-free">
+              <input type="radio" name="shipping" value="free" onchange="pickShipping(this,'ship-free','0')" />
+              <div>
+                <div class="ship-name"><i class="bi bi-gift me-1 text-accent"></i>Free pickup (store)</div>
+                <div class="ship-sub">Available in 2 hours</div>
+              </div>
+              <span class="ship-price text-success">Free</span>
+            </label>
+          </div>
           <!-- ── Section 2: Cart items ── -->
           <div class="card-section">
             <div class="section-head">
@@ -317,8 +318,28 @@ $stmt->close();
               <div class="section-num">4</div>
               <p class="section-title mb-0">Payment method</p>
             </div>
-
-            <div class="pay-method active" id="pay-card">
+            
+            <div class="pay-method active" id="pay-cod">
+              <label class="pay-label" onclick="selectPay('pay-cod')">
+                <span class="pay-icon" style="color:#d4860a;"><i class="bi bi-cash-coin"></i></span>
+                <div>
+                  <p class="pay-name mb-0">Cash on delivery</p>
+                  <p class="pay-sub mb-0">Pay when your order arrives</p>
+                </div>
+                <input class="pay-radio" id="radio" type="radio" name="payMethod" value="cod" />
+              </label>
+              <div class="pay-panel">
+                <div
+                  style="display:flex;align-items:flex-start;gap:10px;background:#fffcf0;border-radius:var(--radius-sm);padding:.85rem;border:1px solid #f0dfb0;">
+                  <i class="bi bi-exclamation-triangle" style="color:#d4860a;font-size:1.1rem;margin-top:1px;"></i>
+                  <div>
+                    <p style="font-weight:600;font-size:.85rem;margin:0;color:#7a5100;">Please prepare exact change</p>
+                    <p style="font-size:.78rem;color:#9a7020;margin:0;">Our rider may not carry change.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="pay-method" id="pay-card">
               <label class="pay-label" onclick="selectPay('pay-card')">
                 <span class="pay-icon text-forest"><i class="bi bi-credit-card-2-front"></i></span>
                 <div>
@@ -420,26 +441,7 @@ $stmt->close();
               </div>
             </div>
 
-            <div class="pay-method" id="pay-cod">
-              <label class="pay-label" onclick="selectPay('pay-cod')">
-                <span class="pay-icon" style="color:#d4860a;"><i class="bi bi-cash-coin"></i></span>
-                <div>
-                  <p class="pay-name mb-0">Cash on delivery</p>
-                  <p class="pay-sub mb-0">Pay when your order arrives</p>
-                </div>
-                <input class="pay-radio" id="radio" type="radio" name="payMethod" value="cod"/>
-              </label>
-              <div class="pay-panel">
-                <div
-                  style="display:flex;align-items:flex-start;gap:10px;background:#fffcf0;border-radius:var(--radius-sm);padding:.85rem;border:1px solid #f0dfb0;">
-                  <i class="bi bi-exclamation-triangle" style="color:#d4860a;font-size:1.1rem;margin-top:1px;"></i>
-                  <div>
-                    <p style="font-weight:600;font-size:.85rem;margin:0;color:#7a5100;">Please prepare exact change</p>
-                    <p style="font-size:.78rem;color:#9a7020;margin:0;">Our rider may not carry change.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            
 
             <input type="hidden" name="notes" id="orderNotes" value="" />
             <input type="hidden" name="place_order" value="1" />
@@ -487,8 +489,10 @@ $stmt->close();
 
     let shippingFee = 49;
     let activeVoucher = null;
-      
-    document.getElementById("radio").checked = true;
+
+    br = document.getElementById("radio");
+    br.classList.add('active');
+    br.checked = true;
     /* ─── Quantity stepper ─── */
     function changeQty(id, delta) {
       const max = stocks[id] || 99;

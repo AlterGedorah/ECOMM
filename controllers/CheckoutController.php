@@ -74,10 +74,14 @@ class CheckoutController
         $userId = (int)$_SESSION['user_id'];
 
         // ── 1. Validate address ──────────────────────────────────────────
-        $required = ['first_name','last_name','phone','street','barangay','city','province','postal_code'];
-        foreach ($required as $field) {
-            if (empty(trim($_POST[$field] ?? ''))) {
-                return ['success' => false, 'error' => "Address field '{$field}' is required."];
+       $addressId = isset($_POST['address_id']) ? (int)$_POST['address_id'] : 0;
+        
+        if ($addressId === 0) {
+            $required = ['first_name','last_name','phone','street','barangay','city','province','postal_code'];
+            foreach ($required as $field) {
+                if (empty(trim($_POST[$field] ?? ''))) {
+                    return ['success' => false, 'error' => "Address field '{$field}' is required."];
+                }
             }
         }
 
@@ -206,10 +210,14 @@ class CheckoutController
             return null;
         }
         return [
-            'id'    => (int)$_SESSION['user_id'],
-            'name'  => $_SESSION['user_name']  ?? '',
-            'email' => $_SESSION['user_email'] ?? '',
-            'role'  => $_SESSION['user_role']  ?? 'user',
+            'id'          => (int)$_SESSION['user_id'],
+            'name'        => $_SESSION['user_name']  ?? '',
+            'first_name'  => $_SESSION['user_first_name'] ?? '',
+            'middle_name' => $_SESSION['user_middle_name'] ?? '',
+            'last_name'   => $_SESSION['user_last_name'] ?? '',
+            'email'       => $_SESSION['user_email'] ?? '',
+            'phone_num'   => $_SESSION['user_phone_num'] ?? null,
+            'role'        => $_SESSION['user_role']  ?? 'user',
         ];
     }
 }

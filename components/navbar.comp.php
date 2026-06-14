@@ -67,7 +67,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="/Fresh Harvest/pages/login.php">Logout</a></li>
+                            <li><a class="dropdown-item" href="/Fresh Harvest/pages/logout.php">Logout</a></li>
                         <?php else: ?>
                             <li><a class="dropdown-item" href="/Fresh Harvest/pages/login.php">Login</a></li>
                             <li><a class="dropdown-item" href="/Fresh Harvest/pages/register.php">Register</a></li>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jun 13, 2026 at 11:23 AM
+-- Generation Time: Jun 14, 2026 at 04:00 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,9 +20,7 @@ SET time_zone = "+00:00";
 --
 -- Database: `r3_farm`
 --
-DROP DATABASE IF EXISTS `r3_farm`;
-CREATE DATABASE `r3_farm`;
-USE `r3_farm`;
+
 -- --------------------------------------------------------
 
 --
@@ -35,8 +33,8 @@ CREATE TABLE `addresses` (
   `address_type` enum('shipping','billing') DEFAULT 'shipping',
   `address_label` varchar(50) DEFAULT NULL,
   `street_address` varchar(255) NOT NULL,
-  `region` varchar(100) NOT NULL,
-  `city` varchar(100) NOT NULL,
+  `region` varchar(100) NOT NULL DEFAULT '',
+  `city` varchar(100) NOT NULL DEFAULT '',
   `barangay` varchar(100) NOT NULL,
   `postal_code` varchar(10) NOT NULL,
   `landmark` varchar(255) DEFAULT NULL,
@@ -45,6 +43,16 @@ CREATE TABLE `addresses` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `addresses`
+--
+
+INSERT INTO `addresses` (`id`, `user_id`, `address_type`, `address_label`, `street_address`, `region`, `city`, `barangay`, `postal_code`, `landmark`, `is_default_shipping`, `is_default_billing`, `created_at`, `updated_at`) VALUES
+(2, 8, 'shipping', 'Home', 'Sam, Banlic, Calamba, Laguna', '', '', 'Banlic', '4027', 'hi', 1, 0, '2026-06-13 09:48:55', '2026-06-13 09:48:55'),
+(4, 8, 'shipping', 'Home', '', '', '', '', '', '', 1, 0, '2026-06-14 01:11:41', '2026-06-14 01:11:41'),
+(6, 11, 'shipping', 'Home', 'Scott Street', 'Batangas', 'Bauan', 'Banlic', '4027', '', 1, 0, '2026-06-14 01:51:01', '2026-06-14 01:56:37'),
+(7, 11, 'shipping', 'Home', 'Sampa', 'Laguna', 'Calamba', 'Banlic', '4027', '', 0, 0, '2026-06-14 01:56:29', '2026-06-14 01:56:37');
 
 -- --------------------------------------------------------
 
@@ -91,6 +99,14 @@ CREATE TABLE `orders` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
+--
+-- Dumping data for table `orders`
+--
+
+INSERT INTO `orders` (`id`, `order_number`, `customer_id`, `shipping_address_id`, `billing_address_id`, `order_status`, `payment_status`, `payment_method`, `payment_reference`, `subtotal`, `delivery_fee`, `tax_amount`, `discount_amount`, `total_amount`, `customer_notes`, `admin_notes`, `estimated_delivery_date`, `actual_delivery_date`, `cancelled_at`, `cancelled_reason`, `created_at`, `updated_at`) VALUES
+(1, 'R3F-20260613-891F0B', 8, 2, NULL, 'pending', 'unpaid', 'credit_card', NULL, 120.00, 49.00, 0.00, 0.00, 169.00, '', NULL, '1970-01-01', NULL, NULL, NULL, '2026-06-13 09:48:55', '2026-06-13 09:48:55'),
+(2, 'R3F-20260614-D98CF5', 8, 4, NULL, 'pending', 'unpaid', 'cash_on_delivery', NULL, 110.00, 49.00, 0.00, 0.00, 159.00, '', NULL, '1970-01-01', NULL, NULL, NULL, '2026-06-14 01:11:41', '2026-06-14 01:11:41');
+
 -- --------------------------------------------------------
 
 --
@@ -107,6 +123,15 @@ CREATE TABLE `order_items` (
   `total_price` decimal(10,2) GENERATED ALWAYS AS (`quantity` * `price_per_unit`) STORED
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
+--
+-- Dumping data for table `order_items`
+--
+
+INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `product_name`, `quantity`, `price_per_unit`) VALUES
+(1, 1, 4, 'Lettuce', 2, 60.00),
+(2, 2, 4, 'Lettuce', 1, 60.00),
+(3, 2, 3, 'Carrot', 1, 50.00);
+
 -- --------------------------------------------------------
 
 --
@@ -121,6 +146,14 @@ CREATE TABLE `order_status_history` (
   `changed_by` int(11) DEFAULT NULL,
   `changed_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `order_status_history`
+--
+
+INSERT INTO `order_status_history` (`id`, `order_id`, `status`, `notes`, `changed_by`, `changed_at`) VALUES
+(1, 1, 'pending', 'Order placed', 8, '2026-06-13 09:48:55'),
+(2, 2, 'pending', 'Order placed', 8, '2026-06-14 01:11:41');
 
 -- --------------------------------------------------------
 
@@ -147,8 +180,8 @@ CREATE TABLE `products` (
 
 INSERT INTO `products` (`id`, `name`, `category`, `current_price`, `quantity`, `unit`, `image_url`, `created_at`, `harvest_date`, `updated_at`) VALUES
 (2, 'Cucumber', 'vegetables', 35.00, 200, NULL, 'uploads/1777469374_Poster.png', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
-(3, 'Carrot', 'vegetables', 50.00, 96, NULL, 'images/carrot.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
-(4, 'Lettuce', 'vegetables', 60.00, 98, NULL, 'images/lettuce.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
+(3, 'Carrot', 'vegetables', 50.00, 95, NULL, 'images/carrot.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
+(4, 'Lettuce', 'vegetables', 60.00, 95, NULL, 'images/lettuce.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
 (5, 'Broccoli', 'vegetables', 75.00, 100, NULL, 'images/broccoli.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
 (6, 'Bell Pepper', 'vegetables', 45.00, 100, NULL, 'images/bellpepper.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
 (7, 'Apple', 'fruits', 80.00, 100, NULL, 'images/apple.jpg', '2026-04-29 11:03:45', '0000-00-00', '0000-00-00 00:00:00'),
@@ -178,10 +211,11 @@ INSERT INTO `products` (`id`, `name`, `category`, `current_price`, `quantity`, `
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `first_name` varchar(120) NOT NULL,
-  `middle_name` varchar(120) NOT NULL,
-  `last_name` varchar(120) NOT NULL,
+  `first_name` varchar(120) DEFAULT NULL,
+  `middle_name` varchar(120) DEFAULT NULL,
+  `last_name` varchar(120) DEFAULT NULL,
   `email` varchar(100) NOT NULL,
+  `phone_num` int(11) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('user','admin') DEFAULT 'user',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -191,18 +225,18 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `first_name`, `middle_name`, `last_name`, `email`, `password`, `role`, `created_at`) VALUES
-(1, 'Admin User', '', '', '', 'admin@r3farm.com', 'admin123', 'admin', '2026-04-29 11:03:45'),
-(2, 'Gab', '', '', '', 'gab@gmail.com', '123', 'user', '2026-04-29 11:25:40'),
-(3, 'Rans Ringor', '', '', '', 'rans@sulasok.com', '123', 'user', '2026-04-29 14:09:31'),
-(4, 'ryan', '', '', '', 'ryan@ryan.com', '9MG~2?!TFc?~Ch4', 'user', '2026-04-29 14:51:07'),
-(5, 'asd', '', '', '', 'asd@asd', '9MG~2?!TFc?~Ch4', 'user', '2026-04-29 14:51:59'),
-(6, 'asdasdasd', '', '', '', 'asdasdsass@asdasdsa', '9MG~2?!TFc?~Ch4', 'user', '2026-04-30 01:04:31'),
-(7, 'asd', '', '', '', 'asd@wqe', '9MG~2?!TFc?~Ch4', 'user', '2026-04-30 01:18:17'),
-(8, 'gabbb', '', '', '', 'gbb123@gil.com', '123456', 'user', '2026-04-30 08:53:14'),
-(9, 'tien', '', '', '', 'tien@gmail.com', '$2y$10$q.Y9RpkXdWR56xSpUSghyO.9lr1HWPUZnW7KauJk.i9MapBq2qoOC', 'user', '2026-05-24 06:13:11'),
-(10, 'tien', '', '', '', 'tien@pup.edu', '$2y$10$tPesVRqHjSDDeRuLBF4v4.rSqaOCIrUgISVZQ6R9.H0NrQG2Q3NTy', 'user', '2026-06-08 09:02:51'),
-(11, 'Edward', '', '', '', 'ed@ed.com', '$2y$10$FmED9rjDcQh5Qfh2CYIbcekTgwhfbYpjcnnHxTw0wx0FMo7Sl7C7m', 'user', '2026-06-13 05:08:35');
+INSERT INTO `users` (`id`, `name`, `first_name`, `middle_name`, `last_name`, `email`, `phone_num`, `password`, `role`, `created_at`) VALUES
+(1, 'Admin User', '', '', '', 'admin@r3farm.com', NULL, 'admin123', 'admin', '2026-04-29 11:03:45'),
+(2, 'Gab', '', '', '', 'gab@gmail.com', NULL, '123', 'user', '2026-04-29 11:25:40'),
+(3, 'Rans Ringor', '', '', '', 'rans@sulasok.com', NULL, '123', 'user', '2026-04-29 14:09:31'),
+(4, 'ryan', '', '', '', 'ryan@ryan.com', NULL, '9MG~2?!TFc?~Ch4', 'user', '2026-04-29 14:51:07'),
+(5, 'asd', '', '', '', 'asd@asd', NULL, '9MG~2?!TFc?~Ch4', 'user', '2026-04-29 14:51:59'),
+(6, 'asdasdasd', '', '', '', 'asdasdsass@asdasdsa', NULL, '9MG~2?!TFc?~Ch4', 'user', '2026-04-30 01:04:31'),
+(7, 'asd', '', '', '', 'asd@wqe', NULL, '9MG~2?!TFc?~Ch4', 'user', '2026-04-30 01:18:17'),
+(8, 'gabbb', '', '', '', 'gbb123@gil.com', NULL, '123456', 'user', '2026-04-30 08:53:14'),
+(9, 'tien', '', '', '', 'tien@gmail.com', NULL, '$2y$10$q.Y9RpkXdWR56xSpUSghyO.9lr1HWPUZnW7KauJk.i9MapBq2qoOC', 'user', '2026-05-24 06:13:11'),
+(10, 'tien', '', '', '', 'tien@pup.edu', NULL, '$2y$10$tPesVRqHjSDDeRuLBF4v4.rSqaOCIrUgISVZQ6R9.H0NrQG2Q3NTy', 'user', '2026-06-08 09:02:51'),
+(11, 'Edward', '', '', '', 'ed@ed.com', NULL, '$2y$10$FmED9rjDcQh5Qfh2CYIbcekTgwhfbYpjcnnHxTw0wx0FMo7Sl7C7m', 'user', '2026-06-13 05:08:35');
 
 --
 -- Indexes for dumped tables
@@ -270,7 +304,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `addresses`
 --
 ALTER TABLE `addresses`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `cart`
@@ -282,19 +316,19 @@ ALTER TABLE `cart`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `order_status_history`
 --
 ALTER TABLE `order_status_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `products`
