@@ -278,5 +278,84 @@ SQL;
         $order['items'] = $items;
         return $order;
     }
+
+    /**
+     * Cancel an order owned by the given user.
+     *
+     * Only orders in pre-fulfillment states may be cancelled:
+     *   - pending, confirmed, processing
+     *
+     * Performs the change inside a single transaction so the order header,
+     * status history, and (if already paid) payment status all stay consistent.
+     *
+     * @return array ['success' => bool, 'error' => string|null]
+     */
+    public function cancelOrder(int $orderId, int $userId, string $reason = ''): array
+    {
+        $cancellable = ['pending', 'confirmed', 'processing'];
+
+        $this->conn->begin_transaction();
+        try {
+            // Lock the row and verify ownership + current state
+            $stmt = $this->conn->prepare("
+                SELECT order_status, payment_status FROM {$this->orders_table}
+                WHERE id = ? AND customer_id = ? FOR UPDATE
+            ");
+            $stmt->bind_param("ii", $orderId, $userId);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+
+            if (!$row) {
+                throw new Exception("Order not found.");
+            }
+            if (!in_array($row['order_status'], $cancellable, true)) {
+                throw new Exception("This order can no longer be cancelled.");
+            }
+
+            // Update order header
+            $upd = $this->conn->prepare("
+                UPDATE {$this->orders_table}
+                SET order_status    = 'cancelled',
+                    cancelled_at    = CURRENT_TIMESTAMP,
+                    cancelled_reason = ?
+                WHERE id = ? AND customer_id = ?
+            ");
+            $upd->bind_param("sii", $reason, $orderId, $userId);
+            if (!$upd->execute()) {
+                throw new Exception("Could not cancel order: " . $upd->error);
+            }
+            $upd->close();
+
+            // If the order was already paid, mark the payment as refunded
+            // so it shows up in the Return/Refund tab too.
+            if ($row['payment_status'] === 'paid') {
+                $refund = $this->conn->prepare("
+                    UPDATE {$this->orders_table}
+                    SET payment_status = 'refunded'
+                    WHERE id = ? AND customer_id = ?
+                ");
+                $refund->bind_param("ii", $orderId, $userId);
+                $refund->execute();
+                $refund->close();
+            }
+
+            // Log the status change
+            $note = $reason !== '' ? "Cancelled by customer: {$reason}" : 'Cancelled by customer';
+            $hist = $this->conn->prepare("
+                INSERT INTO {$this->history_table} (order_id, status, notes, changed_by)
+                VALUES (?, 'cancelled', ?, ?)
+            ");
+            $hist->bind_param("isi", $orderId, $note, $userId);
+            $hist->execute();
+            $hist->close();
+
+            $this->conn->commit();
+            return ['success' => true, 'error' => null];
+        } catch (Exception $e) {
+            $this->conn->rollback();
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
 }
 ?>

@@ -44,6 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Validation
     if (empty($email)) {
         $error = "Email is required!";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Please enter a valid email address!";
     } elseif (empty($password)) {
         $error = "Password is required!";
     } else {

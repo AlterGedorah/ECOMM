@@ -194,36 +194,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) && $_POST[
     }
 }
 
+// Handle cancel order
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) && $_POST['action'] === 'cancel_order')) {
+    require_once __DIR__ . '/models/Order.php';
+    $orderModel = new Order();
+    $orderId = (int) ($_POST['order_id'] ?? 0);
+    $reason = trim($_POST['cancel_reason'] ?? '');
+
+    $result = $orderModel->cancelOrder($orderId, $user_id, $reason);
+    if ($result['success']) {
+        $success = "Order cancelled successfully.";
+    } else {
+        $error = $result['error'] ?? "Could not cancel order.";
+    }
+}
+
 // Handle delete address
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) && $_POST['action'] === 'delete_address')) {
     $addressId = (int) ($_POST['address_id'] ?? 0);
     if ($addressId > 0) {
+        // Confirm the address belongs to the current user before touching it
+        $owned = false;
         $wasDefault = false;
         foreach ($addresses as $a) {
-            if ((int) $a['id'] === $addressId && (int) $a['is_default_shipping'] === 1) {
-                $wasDefault = true;
+            if ((int) $a['id'] === $addressId) {
+                $owned = true;
+                if ((int) $a['is_default_shipping'] === 1) {
+                    $wasDefault = true;
+                }
                 break;
             }
         }
 
-        $del = $conn->prepare("DELETE FROM addresses WHERE id = ? AND user_id = ?");
-        $del->bind_param("ii", $addressId, $user_id);
-        if ($del->execute()) {
-            $success = "Address deleted.";
-            $del->close();
-            $addresses = loadAddresses($conn, $user_id);
-
-            if ($wasDefault && !empty($addresses)) {
-                $newDefaultId = (int) $addresses[0]['id'];
-                $upDef = $conn->prepare("UPDATE addresses SET is_default_shipping = 1 WHERE id = ?");
-                $upDef->bind_param("i", $newDefaultId);
-                $upDef->execute();
-                $upDef->close();
-                $addresses = loadAddresses($conn, $user_id);
-            }
+        if (!$owned) {
+            $error = "Address not found.";
         } else {
-            $error = "Could not delete address.";
-            $del->close();
+            // Block deletion if any order still references this address
+            $refCheck = $conn->prepare("SELECT COUNT(*) AS c FROM orders WHERE shipping_address_id = ? OR billing_address_id = ?");
+            $orderCount = 0;
+            if ($refCheck) {
+                $refCheck->bind_param("ii", $addressId, $addressId);
+                $refCheck->execute();
+                $row = $refCheck->get_result()->fetch_assoc();
+                $orderCount = (int) ($row['c'] ?? 0);
+                $refCheck->close();
+            }
+
+            if ($orderCount > 0) {
+                $error = "This address cannot be deleted because it is used by " . $orderCount . " order" . ($orderCount === 1 ? '' : 's') . ".";
+            } else {
+                $del = $conn->prepare("DELETE FROM addresses WHERE id = ? AND user_id = ?");
+                $del->bind_param("ii", $addressId, $user_id);
+                if ($del->execute()) {
+                    $success = "Address deleted.";
+                    $del->close();
+                    $addresses = loadAddresses($conn, $user_id);
+
+                    if ($wasDefault && !empty($addresses)) {
+                        $newDefaultId = (int) $addresses[0]['id'];
+                        $upDef = $conn->prepare("UPDATE addresses SET is_default_shipping = 1 WHERE id = ?");
+                        $upDef->bind_param("i", $newDefaultId);
+                        $upDef->execute();
+                        $upDef->close();
+                        $addresses = loadAddresses($conn, $user_id);
+                    }
+                } else {
+                    $error = "Could not delete address.";
+                    $del->close();
+                }
+            }
         }
     }
 }
@@ -309,6 +348,8 @@ function renderOrdersList(array $orders): string
         return '<div class="text-center text-muted py-5 small">No orders in this section.</div>';
     }
 
+    $cancellableStatuses = ['pending', 'confirmed', 'processing'];
+
     $html = '<div class="d-flex flex-column gap-3">';
     foreach ($orders as $order) {
         $status = $order['order_status'];
@@ -338,6 +379,7 @@ function renderOrdersList(array $orders): string
         }
 
         $createdAt = !empty($order['created_at']) ? date('M j, Y g:i A', strtotime($order['created_at'])) : '';
+        $canCancel = in_array($status, $cancellableStatuses, true);
 
         $html .= '<div class="border rounded p-3 bg-white order-card">';
         $html .= '<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom">';
@@ -363,12 +405,23 @@ function renderOrdersList(array $orders): string
             $html .= '</div>';
         }
 
-        // Footer
-        $html .= '<div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top">';
+        // Footer with total + actions
+        $html .= '<div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top flex-wrap gap-2">';
         $html .= '<div class="small text-muted">Payment: ' . htmlspecialchars(ucwords(str_replace('_', ' ', (string) $order['payment_method']))) . '</div>';
+        $html .= '<div class="d-flex align-items-center gap-3">';
         $html .= '<div class="d-flex align-items-center gap-2">';
         $html .= '<span class="text-muted small">Total:</span>';
         $html .= '<span class="fw-bold">₱' . number_format((float) $order['total_amount'], 2) . '</span>';
+        $html .= '</div>';
+
+        if ($canCancel) {
+            $html .= '<button type="button" class="btn btn-outline-danger btn-sm cancel-order-btn" '
+                . 'data-bs-toggle="modal" data-bs-target="#cancelOrderModal" '
+                . 'data-order-id="' . (int) $order['id'] . '" '
+                . 'data-order-number="' . htmlspecialchars($order['order_number']) . '">'
+                . '<i class="bi bi-x-circle me-1"></i>Cancel Order</button>';
+        }
+
         $html .= '</div>';
         $html .= '</div>';
 
@@ -673,6 +726,51 @@ function renderOrdersList(array $orders): string
         </main>
     </div>
 
+    <!-- Cancel Order Modal -->
+    <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="post" id="cancelOrderForm">
+                    <input type="hidden" name="action" value="cancel_order">
+                    <input type="hidden" name="order_id" id="cancelOrderId" value="">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cancelOrderModalLabel">Cancel Order</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3">
+                            You're about to cancel order
+                            <span id="cancelOrderNumber" class="fw-semibold text-dark"></span>.
+                            This action cannot be undone.
+                        </p>
+                        <div class="mb-2">
+                            <label for="cancelReasonSelect" class="form-label small">Reason</label>
+                            <select class="form-select form-select-sm" id="cancelReasonSelect">
+                                <option value="">-- Select a reason --</option>
+                                <option value="Changed my mind">Changed my mind</option>
+                                <option value="Ordered by mistake">Ordered by mistake</option>
+                                <option value="Found a better price">Found a better price</option>
+                                <option value="Delivery time is too long">Delivery time is too long</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-2 d-none" id="cancelReasonOtherWrap">
+                            <label for="cancelReason" class="form-label small">Tell us more (optional)</label>
+                            <textarea class="form-control form-control-sm" id="cancelReason" rows="3"
+                                placeholder="Anything we should know?"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Keep Order</button>
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="bi bi-x-circle me-1"></i>Cancel Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.querySelectorAll('.nav-link-side').forEach(item => {
@@ -743,6 +841,66 @@ function renderOrdersList(array $orders): string
                 });
             });
         });
+
+        // Cancel order modal wiring
+        const cancelOrderModal = document.getElementById('cancelOrderModal');
+        if (cancelOrderModal) {
+            cancelOrderModal.addEventListener('show.bs.modal', (event) => {
+                const button = event.relatedTarget;
+                if (!button) return;
+                const orderId = button.getAttribute('data-order-id');
+                const orderNumber = button.getAttribute('data-order-number') || '';
+                document.getElementById('cancelOrderId').value = orderId || '';
+                document.getElementById('cancelOrderNumber').textContent = orderNumber;
+                // Reset the form each time
+                const sel = document.getElementById('cancelReasonSelect');
+                if (sel) sel.value = '';
+                const other = document.getElementById('cancelReasonOtherWrap');
+                if (other) other.classList.add('d-none');
+                const ta = document.getElementById('cancelReason');
+                if (ta) ta.value = '';
+            });
+        }
+
+        const reasonSelect = document.getElementById('cancelReasonSelect');
+        const reasonOtherWrap = document.getElementById('cancelReasonOtherWrap');
+        if (reasonSelect && reasonOtherWrap) {
+            reasonSelect.addEventListener('change', () => {
+                if (reasonSelect.value === 'Other') {
+                    reasonOtherWrap.classList.remove('d-none');
+                } else {
+                    reasonOtherWrap.classList.add('d-none');
+                }
+            });
+        }
+
+        // Before submitting, copy the chosen reason into a hidden input so
+        // the server receives the actual cancellation reason.
+        const cancelForm = document.getElementById('cancelOrderForm');
+        if (cancelForm) {
+            cancelForm.addEventListener('submit', () => {
+                const sel = document.getElementById('cancelReasonSelect');
+                const ta = document.getElementById('cancelReason');
+                const chosen = sel && sel.value ? sel.value : '';
+                const extra = ta && ta.value ? ta.value.trim() : '';
+                let finalReason = chosen;
+                if (chosen === 'Other') {
+                    finalReason = extra !== '' ? extra : 'Other';
+                } else if (chosen === '' && extra !== '') {
+                    finalReason = extra;
+                }
+
+                // Add (or update) a hidden input for the reason
+                let hidden = cancelForm.querySelector('input[name="cancel_reason"]');
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'cancel_reason';
+                    cancelForm.appendChild(hidden);
+                }
+                hidden.value = finalReason;
+            });
+        }
 
         const showBtn = document.getElementById('showAddAddress');
         const cancelBtn = document.getElementById('cancelAddAddress');
