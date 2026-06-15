@@ -131,17 +131,20 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
             </div>
             <div class="row ms-5 me-5">
                 <?php foreach ($products[$key] as $product): ?>
+                    <?php $productUnit = trim((string) ($product['unit'] ?? '')); ?>
                     <div class="col-12 col-md-6 col-lg-4 col-xl-3 mt-3">
                         <div class="card rounded-4 overflow-hidden h-100">
                             <div style="height: 250px; background-image: url('<?= $product['image_url'] ?? 'placeholder.jpg' ?>'); background-size: cover; background-position: center; cursor: pointer;"
                                 data-bs-toggle="modal" data-bs-target="#productModal" data-id="<?= $product['id'] ?>"
                                 data-name="<?= htmlspecialchars($product['name']) ?>" data-price="<?= $product['current_price'] ?>"
                                 data-quantity="<?= $product['quantity'] ?>"
+                                data-unit="<?= htmlspecialchars($productUnit) ?>"
                                 data-image="<?= $product['image_url'] ?? 'placeholder.jpg' ?>">
                             </div>
                             <div class="p-4" style="background-color: #F6F3F0;">
                                 <div class="h4"><?= htmlspecialchars($product['name']) ?></div>
                                 <div class="text-secondary">₱<?= number_format($product['current_price'], 2) ?></div>
+                                <div class="text-muted small">/ <?= htmlspecialchars($productUnit !== '' ? $productUnit : 'unit') ?></div>
 
                                 <!-- Stock indicator -->
                                 <?php if ($product['quantity'] > 0): ?>
@@ -155,6 +158,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                                         data-bs-target="#productModal" data-id="<?= $product['id'] ?>"
                                         data-name="<?= htmlspecialchars($product['name']) ?>" data-price="<?= $product['current_price'] ?>"
                                         data-quantity="<?= $product['quantity'] ?>"
+                                        data-unit="<?= htmlspecialchars($productUnit) ?>"
                                         data-image="<?= $product['image_url'] ?? 'placeholder.jpg' ?>">
                                         BUY
                                     </button>
@@ -195,6 +199,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                             <div class="border rounded-4 p-4 bg-white shadow-sm">
                                 <!-- Price -->
                                 <p class="fw-semibold mb-3" id="modalPrice" style="font-size: 1.1rem;"></p>
+                                <p class="text-muted mb-3" id="modalUnit" style="font-size: 0.95rem;"></p>
 
                                 <!-- Stock info -->
                                 <div id="modalStock" class="mb-3"></div>
@@ -410,6 +415,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                 const name = this.getAttribute('data-name');
                 const price = this.getAttribute('data-price');
                 const quantity = parseInt(this.getAttribute('data-quantity'));
+                const unit = this.getAttribute('data-unit');
                 let image = this.getAttribute('data-image');
 
                 // Fix image path - add ./ if needed or use default
@@ -424,6 +430,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                 document.getElementById('modalProductId').value = id;
                 document.getElementById('modalName').innerText = name;
                 document.getElementById('modalPrice').innerHTML = `₱${parseFloat(price).toFixed(2)}`;
+                document.getElementById('modalUnit').innerText = unit ? `Unit: ${unit}` : 'Unit: item';
 
                 // Handle image loading with error fallback
                 const modalImg = document.getElementById('modalImage');
