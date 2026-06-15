@@ -98,6 +98,16 @@ $products = $productController->adminIndex();
                                     <label class="form-label">Stock Quantity</label>
                                     <input type="number" name="quantity" value="0" min="0" class="form-control" required>
                                 </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Unit</label>
+                                    <select name="unit" class="form-select">
+                                        <option value="">-- Select unit --</option>
+                                        <option value="kg">Kilogram (kg)</option>
+                                        <option value="pcs">Pieces (pcs)</option>
+                                        <option value="liter">Liter</option>
+                                        <option value="sack">Sack</option>
+                                    </select>
+                                </div>
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label">Product Image</label>
                                     <input type="file" name="image" class="form-control" accept="image/*">
@@ -116,7 +126,8 @@ $products = $productController->adminIndex();
                         <h4 class="mb-0">All Products</h4>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
+                        <div class="table-reUnit</th>
+                                        <th>sponsive">
                             <table class="table table-bordered table-hover">
                                 <thead class="table-dark">
                                     <tr>
@@ -168,7 +179,17 @@ $products = $productController->adminIndex();
                                                     <input type="number" name="quantity" value="<?= $product['quantity'] ?>"
                                                         min="0" class="form-control form-control-sm" style="width: 100px;" required>
                                                 </td>
-                                                
+
+                                                <td>
+                                                    <select name="unit" class="form-select form-select-sm" style="width: 110px;">
+                                                        <option value="" <?= empty($product['unit']) ? 'selected' : '' ?>>--</option>
+                                                        <option value="kg" <?= $product['unit'] == 'kg' ? 'selected' : '' ?>>kg</option>
+                                                        <option value="pcs" <?= $product['unit'] == 'pcs' ? 'selected' : '' ?>>pcs</option>
+                                                        <option value="liter" <?= $product['unit'] == 'liter' ? 'selected' : '' ?>>liter</option>
+                                                        <option value="sack" <?= $product['unit'] == 'sack' ? 'selected' : '' ?>>sack</option>
+                                                    </select>
+                                                </td>
+
                                                 <td>
                                                     <button type="submit" class="btn btn-warning btn-sm">✏️ Update</button>
                                             </form>

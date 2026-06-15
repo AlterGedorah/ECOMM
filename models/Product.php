@@ -10,6 +10,7 @@ class Product {
     public $category;
     public $price;
     public $quantity;
+    public $unit;
     public $image_url;
     public $created_at;
     
@@ -19,9 +20,9 @@ class Product {
     }
     
     public function create() {
-        $stmt = $this->conn->prepare("INSERT INTO {$this->table} (name, category, price, quantity, image_url) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssdis", $this->name, $this->category, $this->price, $this->quantity, $this->image_url);
-        return $stmt->execute();    
+        $stmt = $this->conn->prepare("INSERT INTO {$this->table} (name, category, price, quantity, unit, image_url) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssdiss", $this->name, $this->category, $this->price, $this->quantity, $this->unit, $this->image_url);
+        return $stmt->execute();
     }
     
     public function read($id) {
@@ -36,7 +37,8 @@ class Product {
             $this->name = $row['name'];
             $this->category = $row['category'];
             $this->price = $row['current_price'];
-            $this->quantity = $row['quantity']; 
+            $this->quantity = $row['quantity'];
+            $this->unit = $row['unit'];
             $this->image_url = $row['image_url'];
             $this->created_at = $row['created_at'];
             return true;
@@ -45,8 +47,8 @@ class Product {
     }
     
     public function update() {
-        $stmt = $this->conn->prepare("UPDATE {$this->table} SET name = ?, category = ?, price = ?, quantity = ?, image_url = ? WHERE id = ?");
-        $stmt->bind_param("ssdiss", $this->name, $this->category, $this->price, $this->quantity, $this->image_url, $this->id);
+        $stmt = $this->conn->prepare("UPDATE {$this->table} SET name = ?, category = ?, price = ?, quantity = ?, unit = ?, image_url = ? WHERE id = ?");
+        $stmt->bind_param("ssdisss", $this->name, $this->category, $this->price, $this->quantity, $this->unit, $this->image_url, $this->id);
         return $stmt->execute();
     }
     

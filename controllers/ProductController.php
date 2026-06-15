@@ -35,13 +35,14 @@ class ProductController {
             $this->product->category = $_POST['category'];
             $this->product->price = $_POST['price'];
             $this->product->quantity = $_POST['quantity'];
-            
+            $this->product->unit = $_POST['unit'] ?? null;
+
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 $this->product->image_url = $this->product->uploadImage($_FILES['image']);
             } else {
                 $this->product->image_url = '';
             }
-            
+
             if ($this->product->create()) {
                 $_SESSION['flash'] = ['type' => 'success', 'message' => 'Product created successfully!'];
             } else {
@@ -61,7 +62,8 @@ class ProductController {
             $this->product->category = $_POST['category'];
             $this->product->price = $_POST['price'];
             $this->product->quantity = $_POST['quantity'];
-            
+            $this->product->unit = $_POST['unit'] ?? null;
+
             // Only update image if new one uploaded
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 $this->product->image_url = $this->product->uploadImage($_FILES['image']);
