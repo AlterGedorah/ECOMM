@@ -12,16 +12,31 @@ class Product {
     public $quantity;
     public $unit;
     public $image_url;
+    public $harvest_date;
     public $created_at;
-    
+    public $updated_at;
+
     public function __construct() {
         $database = new Database();
         $this->conn = $database->getConnection();
     }
-    
+
     public function create() {
-        $stmt = $this->conn->prepare("INSERT INTO {$this->table} (name, category, price, quantity, unit, image_url) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssdiss", $this->name, $this->category, $this->price, $this->quantity, $this->unit, $this->image_url);
+        $stmt = $this->conn->prepare(
+            "INSERT INTO {$this->table}
+                (name, category, current_price, quantity, unit, image_url, harvest_date, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())"
+        );
+        $stmt->bind_param(
+            "ssdisss",
+            $this->name,
+            $this->category,
+            $this->price,
+            $this->quantity,
+            $this->unit,
+            $this->image_url,
+            $this->harvest_date
+        );
         return $stmt->execute();
     }
     
@@ -47,8 +62,23 @@ class Product {
     }
     
     public function update() {
-        $stmt = $this->conn->prepare("UPDATE {$this->table} SET name = ?, category = ?, price = ?, quantity = ?, unit = ?, image_url = ? WHERE id = ?");
-        $stmt->bind_param("ssdisss", $this->name, $this->category, $this->price, $this->quantity, $this->unit, $this->image_url, $this->id);
+        $stmt = $this->conn->prepare(
+            "UPDATE {$this->table}
+             SET name = ?, category = ?, current_price = ?, quantity = ?, unit = ?,
+                 image_url = ?, harvest_date = ?, updated_at = NOW()
+             WHERE id = ?"
+        );
+        $stmt->bind_param(
+            "ssdisssi",
+            $this->name,
+            $this->category,
+            $this->price,
+            $this->quantity,
+            $this->unit,
+            $this->image_url,
+            $this->harvest_date,
+            $this->id
+        );
         return $stmt->execute();
     }
     

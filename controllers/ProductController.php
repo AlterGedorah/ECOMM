@@ -36,6 +36,9 @@ class ProductController {
             $this->product->price = $_POST['price'];
             $this->product->quantity = $_POST['quantity'];
             $this->product->unit = $_POST['unit'] ?? null;
+            $this->product->harvest_date = !empty($_POST['harvest_date'])
+                ? $_POST['harvest_date']
+                : date('Y-m-d');
 
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 $this->product->image_url = $this->product->uploadImage($_FILES['image']);
@@ -48,21 +51,24 @@ class ProductController {
             } else {
                 $_SESSION['flash'] = ['type' => 'danger', 'message' => ' Failed to create product'];
             }
-            
+
             header("Location: /Fresh Harvest/admin_dashboard.php");
             exit();
         }
     }
-    
+
     public function update() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $this->product->id = $_POST['id'];
-            
+
             $this->product->name = $_POST['name'];
             $this->product->category = $_POST['category'];
             $this->product->price = $_POST['price'];
             $this->product->quantity = $_POST['quantity'];
             $this->product->unit = $_POST['unit'] ?? null;
+            $this->product->harvest_date = !empty($_POST['harvest_date'])
+                ? $_POST['harvest_date']
+                : date('Y-m-d');
 
             // Only update image if new one uploaded
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
@@ -73,13 +79,13 @@ class ProductController {
                 $current->read($this->product->id);
                 $this->product->image_url = $current->image_url;
             }
-            
+
             if ($this->product->update()) {
                 $_SESSION['flash'] = ['type' => 'success', 'message' => 'Product updated successfully!'];
             } else {
                 $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Failed to update product'];
             }
-            
+
             header("Location: /Fresh Harvest/admin_dashboard.php");
             exit();
         }

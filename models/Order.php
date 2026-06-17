@@ -4,10 +4,10 @@ require_once __DIR__ . '/../config/Database.php';
 class Order
 {
     private $conn;
-    private $orders_table      = "orders";
-    private $items_table       = "order_items";
-    private $history_table     = "order_status_history";
-    private $addresses_table   = "addresses";
+    private $orders_table = "orders";
+    private $items_table = "order_items";
+    private $history_table = "order_status_history";
+    private $addresses_table = "addresses";
 
     public $id;
     public $order_number;
@@ -39,8 +39,8 @@ class Order
      */
     public static function generateOrderNumber(): string
     {
-        $date    = date('Ymd');
-        $random  = strtoupper(bin2hex(random_bytes(3)));
+        $date = date('Ymd');
+        $random = strtoupper(bin2hex(random_bytes(3)));
         return "R3F-{$date}-{$random}";
     }
 
@@ -65,30 +65,30 @@ class Order
             }
 
             // 2. Compute totals from the provided product snapshot
-            $subtotal  = 0.0;
+            $subtotal = 0.0;
             $lineItems = [];
             foreach ($cartItems as $productId => $qty) {
                 if (!isset($productLookup[$productId])) {
                     throw new Exception("Product {$productId} no longer exists.");
                 }
-                $p   = $productLookup[$productId];
+                $p = $productLookup[$productId];
                 $row = [
-                    'product_id'    => (int)$p['id'],
-                    'product_name'  => $p['name'],
-                    'price_per_unit'=> (float)$p['price'],
-                    'quantity'      => (int)$qty,
+                    'product_id' => (int) $p['id'],
+                    'product_name' => $p['name'],
+                    'price_per_unit' => (float) $p['price'],
+                    'quantity' => (int) $qty,
                 ];
                 $row['total_price'] = $row['price_per_unit'] * $row['quantity'];
                 $subtotal += $row['total_price'];
                 $lineItems[] = $row;
             }
 
-            $shippingFee   = (float)($payment['shipping_fee']   ?? 0);
-            $discount      = (float)($payment['discount']       ?? 0);
-            $totalAmount   = max(0, $subtotal + $shippingFee - $discount);
+            $shippingFee = (float) ($payment['shipping_fee'] ?? 0);
+            $discount = (float) ($payment['discount'] ?? 0);
+            $totalAmount = max(0, $subtotal + $shippingFee - $discount);
 
             // 3. Create order header
-            $orderNumber   = self::generateOrderNumber();
+            $orderNumber = self::generateOrderNumber();
             $paymentMethod = $this->mapPaymentMethod($payment['method'] ?? 'cod');
 
             $sql = <<<SQL
@@ -138,10 +138,10 @@ SQL;
 
             foreach ($lineItems as $li) {
                 // Bind into variables in the correct order: order_id, product_id, product_name, quantity, price
-                $prodId   = $li['product_id'];
+                $prodId = $li['product_id'];
                 $prodName = $li['product_name'];
-                $qty      = $li['quantity'];
-                $ppu      = $li['price_per_unit'];
+                $qty = $li['quantity'];
+                $ppu = $li['price_per_unit'];
                 $itemStmt->bind_param(
                     "iisid",
                     $orderId,
@@ -173,8 +173,8 @@ SQL;
 
             $this->conn->commit();
             return [
-                'success'      => true,
-                'order_id'     => $orderId,
+                'success' => true,
+                'order_id' => $orderId,
                 'order_number' => $orderNumber,
                 'total_amount' => $totalAmount,
             ];
@@ -189,11 +189,11 @@ SQL;
      */
     private function saveAddress(int $userId, array $a): ?int
     {
-        $street     = trim($a['street']     ?? '');
-        $barangay   = trim($a['barangay']   ?? '');
-        $city       = trim($a['city']       ?? '');
-        $province   = trim($a['province']   ?? '');
-        $postal     = trim($a['postal_code']?? '');
+        $street = trim($a['street'] ?? '');
+        $barangay = trim($a['barangay'] ?? '');
+        $city = trim($a['city'] ?? '');
+        $province = trim($a['province'] ?? '');
+        $postal = trim($a['postal_code'] ?? '');
         $fullStreet = trim("{$street}, {$barangay}, {$city}, {$province}", ', ');
 
         $stmt = $this->conn->prepare("
@@ -218,11 +218,11 @@ SQL;
     {
         $method = strtolower(trim($method));
         $map = [
-            'card'  => 'credit_card',
+            'card' => 'credit_card',
             'gcash' => 'gcash',
-            'maya'  => 'maya',
-            'bank'  => 'bank_transfer',
-            'cod'   => 'cash_on_delivery',
+            'maya' => 'maya',
+            'bank' => 'bank_transfer',
+            'cod' => 'cash_on_delivery',
         ];
         return $map[$method] ?? 'cash_on_delivery';
     }
@@ -241,7 +241,7 @@ SQL;
         ");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
-        $res  = $stmt->get_result();
+        $res = $stmt->get_result();
         $rows = [];
         while ($r = $res->fetch_assoc()) {
             $rows[] = $r;

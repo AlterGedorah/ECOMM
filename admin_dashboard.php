@@ -108,6 +108,10 @@ $products = $productController->adminIndex();
                                         <option value="sack">Sack</option>
                                     </select>
                                 </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Harvest Date</label>
+                                    <input type="date" name="harvest_date" class="form-control" value="<?= date('Y-m-d') ?>">
+                                </div>
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label">Product Image</label>
                                     <input type="file" name="image" class="form-control" accept="image/*">
@@ -126,8 +130,7 @@ $products = $productController->adminIndex();
                         <h4 class="mb-0">All Products</h4>
                     </div>
                     <div class="card-body">
-                        <div class="table-reUnit</th>
-                                        <th>sponsive">
+                        <div class="table-responsive">
                             <table class="table table-bordered table-hover">
                                 <thead class="table-dark">
                                     <tr>
@@ -137,6 +140,8 @@ $products = $productController->adminIndex();
                                         <th>Category</th>
                                         <th>Price</th>
                                         <th>Stock</th>
+                                        <th>Unit</th>
+                                        <th>Harvest Date</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -188,6 +193,12 @@ $products = $productController->adminIndex();
                                                         <option value="liter" <?= $product['unit'] == 'liter' ? 'selected' : '' ?>>liter</option>
                                                         <option value="sack" <?= $product['unit'] == 'sack' ? 'selected' : '' ?>>sack</option>
                                                     </select>
+                                                </td>
+
+                                                <td>
+                                                    <input type="date" name="harvest_date"
+                                                        value="<?= htmlspecialchars($product['harvest_date'] ?? date('Y-m-d')) ?>"
+                                                        class="form-control form-control-sm" style="width: 150px;">
                                                 </td>
 
                                                 <td>
