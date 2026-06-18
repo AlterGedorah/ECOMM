@@ -460,6 +460,151 @@ function renderOrdersList(array $orders): string
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="icon" href="images/icon.png">
     <link rel="stylesheet" href="styles/profile.css">
+    <style>
+        /* ── Mobile-responsive overrides ── */
+
+        /* Sidebar toggle button (mobile only) */
+        #sidebarToggle {
+            display: none;
+        }
+
+        /* Desktop: sidebar body always visible */
+        @media (min-width: 768px) {
+            #sidebarBody {
+                display: flex !important;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+
+            /* Root layout: stack instead of side-by-side */
+            body > .d-flex {
+                flex-direction: column !important;
+            }
+
+            /* Sidebar becomes a collapsible top bar */
+            #sidebar {
+                width: 100% !important;
+                min-height: unset !important;
+                height: auto !important;
+                padding: 0.75rem 1rem !important;
+                position: relative;
+            }
+
+            /* Show hamburger toggle */
+            #sidebarToggle {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                background: none;
+                border: none;
+                color: #fff;
+                font-size: 0.95rem;
+                padding: 0;
+                cursor: pointer;
+            }
+
+            /* Collapsible sidebar body */
+            #sidebarBody {
+                display: none;
+                padding-top: 0.75rem;
+                margin-top: 0.75rem;
+                border-top: 1px solid rgba(255,255,255,0.2);
+            }
+            #sidebarBody.open {
+                display: block;
+            }
+
+            /* Main content: reduce padding */
+            main.flex-grow-1 {
+                padding: 1.25rem !important;
+            }
+
+            /* Content header */
+            .content-header h2 {
+                font-size: 1.25rem;
+            }
+
+            /* Profile form: make label/input stack on very small screens */
+            .row.align-items-center.mb-3 > label.col-4,
+            .row.align-items-center.mb-3 > label.col-sm-3 {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: 0 0 100% !important;
+                margin-bottom: 0.2rem;
+            }
+            .row.align-items-center.mb-3 > .col {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: 0 0 100% !important;
+            }
+
+            /* Save/Cancel buttons row */
+            #profileFormActions .col-sm-9 {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: 0 0 100% !important;
+                padding-left: 0 !important;
+                margin-left: 0 !important;
+            }
+
+            /* Profile image column: remove left border, reduce spacing */
+            .col-lg-4.border-start {
+                border-left: none !important;
+                border-top: 1px solid #dee2e6;
+                padding-top: 1rem;
+            }
+
+            /* Address form: single column on mobile */
+            #addAddressForm .row > [class*="col-md"] {
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                margin-top: 0.5rem !important;
+            }
+
+            /* Purchase tab bar: smaller text */
+            .sub-tab-nav .nav-link {
+                font-size: 0.72rem;
+                padding: 0.5rem 0.5rem !important;
+                white-space: nowrap;
+            }
+
+            /* Order cards: stack header info */
+            .order-card .d-flex.justify-content-between.align-items-center.flex-wrap {
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+
+            /* Order footer: stack total + cancel button */
+            .order-card .d-flex.justify-content-between.align-items-center.pt-2 {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 0.5rem !important;
+            }
+
+            /* Card padding reduction */
+            .card.p-4 {
+                padding: 1rem !important;
+            }
+            .card.mb-4.p-4 {
+                padding: 1rem !important;
+            }
+
+            /* Payment tiles */
+            .payment-tile {
+                width: 100% !important;
+            }
+
+            /* Back link + user info row */
+            #sidebar .d-flex.align-items-center.gap-3 {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -468,30 +613,41 @@ function renderOrdersList(array $orders): string
 
         <!-- SIDEBAR -->
         <aside id="sidebar" class="p-4 d-flex flex-column gap-3">
-            <a href="index.php" class="text-white text-decoration-none small">
-                <i class="bi bi-arrow-left me-1"></i>Back
-            </a>
-            <div class="d-flex align-items-center gap-3 pb-3 border-bottom border-white border-opacity-25">
-                <div class="avatar-circle"></div>
-                <div>
-                    <div class="fw-semibold text-white"><?= htmlspecialchars($displayName) ?></div>
-                    <div class="text-white opacity-50" style="font-size:.7rem;">Member since
-                        <?= htmlspecialchars($member_since) ?></div>
-                    <a href="#" id="sidebarEditProfile" class="text-white opacity-75 text-decoration-underline"
-                        style="font-size:.7rem;">Edit Profile</a>
+            <!-- Mobile toggle row -->
+            <button id="sidebarToggle" aria-expanded="false" aria-controls="sidebarBody">
+                <span class="d-flex align-items-center gap-2">
+                    <div class="avatar-circle" style="width:28px;height:28px;flex-shrink:0;"></div>
+                    <span class="text-white fw-semibold" style="font-size:.9rem;"><?= htmlspecialchars($displayName) ?></span>
+                </span>
+                <i class="bi bi-chevron-down text-white" id="sidebarChevron"></i>
+            </button>
+
+            <div id="sidebarBody">
+                <a href="index.php" class="text-white text-decoration-none small">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
+                <div class="d-flex align-items-center gap-3 pb-3 border-bottom border-white border-opacity-25 mt-2">
+                    <div class="avatar-circle"></div>
+                    <div>
+                        <div class="fw-semibold text-white"><?= htmlspecialchars($displayName) ?></div>
+                        <div class="text-white opacity-50" style="font-size:.7rem;">Member since
+                            <?= htmlspecialchars($member_since) ?></div>
+                        <a href="#" id="sidebarEditProfile" class="text-white opacity-75 text-decoration-underline"
+                            style="font-size:.7rem;">Edit Profile</a>
+                    </div>
                 </div>
+                <nav>
+                    <p class="text-white fs-6 fw-medium mb-2">My account</p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="nav-link-side active" data-target="profile-panel"><i
+                                class="bi bi-person me-2"></i>Profile</li>
+                        <li class="nav-link-side" data-target="payment-panel"><i class="bi bi-credit-card me-2"></i>Payment
+                        </li>
+                        <li class="nav-link-side" data-target="purchase-panel"><i class="bi bi-bag me-2"></i>My Purchase
+                        </li>
+                    </ul>
+                </nav>
             </div>
-            <nav>
-                <p class="text-white fs-6 fw-medium mb-2">My account</p>
-                <ul class="list-unstyled mb-0">
-                    <li class="nav-link-side active" data-target="profile-panel"><i
-                            class="bi bi-person me-2"></i>Profile</li>
-                    <li class="nav-link-side" data-target="payment-panel"><i class="bi bi-credit-card me-2"></i>Payment
-                    </li>
-                    <li class="nav-link-side" data-target="purchase-panel"><i class="bi bi-bag me-2"></i>My Purchase
-                    </li>
-                </ul>
-            </nav>
         </aside>
 
         <!-- MAIN CONTENT -->
@@ -924,6 +1080,35 @@ function renderOrdersList(array $orders): string
         const formDiv = document.getElementById('addAddressForm');
         if (showBtn && formDiv) showBtn.addEventListener('click', () => formDiv.classList.remove('d-none'));
         if (cancelBtn && formDiv) cancelBtn.addEventListener('click', () => formDiv.classList.add('d-none'));
+
+        // Sidebar mobile toggle
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarBody = document.getElementById('sidebarBody');
+        const sidebarChevron = document.getElementById('sidebarChevron');
+        if (sidebarToggle && sidebarBody) {
+            sidebarToggle.addEventListener('click', () => {
+                const isOpen = sidebarBody.classList.toggle('open');
+                sidebarToggle.setAttribute('aria-expanded', isOpen);
+                if (sidebarChevron) {
+                    sidebarChevron.classList.toggle('bi-chevron-down', !isOpen);
+                    sidebarChevron.classList.toggle('bi-chevron-up', isOpen);
+                }
+            });
+        }
+
+        // Close sidebar on nav item click (mobile)
+        document.querySelectorAll('.nav-link-side').forEach(item => {
+            item.addEventListener('click', () => {
+                if (window.innerWidth < 768 && sidebarBody) {
+                    sidebarBody.classList.remove('open');
+                    if (sidebarToggle) sidebarToggle.setAttribute('aria-expanded', 'false');
+                    if (sidebarChevron) {
+                        sidebarChevron.classList.add('bi-chevron-down');
+                        sidebarChevron.classList.remove('bi-chevron-up');
+                    }
+                }
+            });
+        });
 
         const cityMap = {
             Cavite: ['Bacoor', 'Cavite City', 'Dasmariñas', 'Imus', 'General Trias', 'Tagaytay', 'Trece Martires'],
