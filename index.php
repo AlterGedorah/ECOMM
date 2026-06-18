@@ -1,6 +1,14 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/controllers/ProductController.php';
+require_once __DIR__ . '/controllers/AuthHelper.php';
+
+// If the user has auth cookies (because they accepted cookies or ticked
+// "remember me") but their PHP session expired, rebuild $_SESSION from
+// the cookies before the rest of the page runs.
+AuthHelper::hydrateSessionFromCookies();
 
 
 $productController = new ProductController();

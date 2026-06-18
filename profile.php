@@ -1,5 +1,11 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/controllers/AuthHelper.php';
+
+// Promote cookie-backed logins into $_SESSION so downstream guards work.
+AuthHelper::hydrateSessionFromCookies();
 
 function buildFullName(?string $firstName, ?string $middleName, ?string $lastName): string
 {
@@ -51,16 +57,23 @@ if ($displayName === '') {
     $displayName = trim((string) ($user['name'] ?? ''));
 }
 
-if ($displayName !== '') {
-    setcookie('user_name', $displayName, time() + (60 * 60 * 24 * 30), "/");
-} else {
-    setcookie('user_name', '', time() - 3600, "/");
-}
+// Only refresh the cookie-mirrored user details if cookies are allowed.
+// When the visitor rejected cookies, the page itself still works from the
+// session, but we MUST NOT write auth cookies to their browser.
+$authCookiesEnabled = AuthHelper::consentState() === 'accepted';
 
-if (!empty($user['phone_num'])) {
-    setcookie('user_phone_num', (string) $user['phone_num'], time() + (60 * 60 * 24 * 30), "/");
-} else {
-    setcookie('user_phone_num', '', time() - 3600, "/");
+if ($authCookiesEnabled) {
+    if ($displayName !== '') {
+        setcookie('user_name', $displayName, time() + (60 * 60 * 24 * 30), "/");
+    } else {
+        setcookie('user_name', '', time() - 3600, "/");
+    }
+
+    if (!empty($user['phone_num'])) {
+        setcookie('user_phone_num', (string) $user['phone_num'], time() + (60 * 60 * 24 * 30), "/");
+    } else {
+        setcookie('user_phone_num', '', time() - 3600, "/");
+    }
 }
 
 $success = "";
@@ -126,11 +139,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) && $_POST[
                 $user['email'] = $newEmail;
                 $user['phone_num'] = $newPhone === '' ? null : (int) $newPhone;
                 $displayName = $newDisplayName;
-                setcookie('user_name', $displayName, time() + (60 * 60 * 24 * 30), "/");
-                if ($user['phone_num'] !== null) {
-                    setcookie('user_phone_num', (string) $user['phone_num'], time() + (60 * 60 * 24 * 30), "/");
-                } else {
-                    setcookie('user_phone_num', '', time() - 3600, "/");
+
+                // Mirror to cookies only when the visitor opted in.
+                if ($authCookiesEnabled) {
+                    setcookie('user_name', $displayName, time() + (60 * 60 * 24 * 30), "/");
+                    if ($user['phone_num'] !== null) {
+                        setcookie('user_phone_num', (string) $user['phone_num'], time() + (60 * 60 * 24 * 30), "/");
+                    } else {
+                        setcookie('user_phone_num', '', time() - 3600, "/");
+                    }
                 }
             } else {
                 $error = "Could not update profile. " . $up->error;

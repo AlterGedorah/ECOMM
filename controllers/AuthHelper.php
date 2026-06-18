@@ -26,6 +26,40 @@ class AuthHelper
     public const REMEMBER_COOKIE_LIFETIME = 86400 * 30;
 
     /**
+     * Returns true when the visitor is authenticated, regardless of whether
+     * the identity is currently held in the PHP session, in auth cookies, or
+     * both. Safe to call from any page BEFORE AuthHelper::hydrateSessionFromCookies().
+     */
+    public static function isLoggedIn(): bool
+    {
+        if (!empty($_SESSION['user_id'])) {
+            return true;
+        }
+
+        // Only trust the cookie-backed identity when cookies are allowed.
+        if (!empty($_COOKIE['user_id']) && self::consentState() === 'accepted') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns the current user's role (string) or null when not logged in.
+     * Prefers the session value, falls back to the cookie.
+     */
+    public static function userRole(): ?string
+    {
+        if (!empty($_SESSION['user_role'])) {
+            return (string) $_SESSION['user_role'];
+        }
+        if (!empty($_COOKIE['user_role']) && self::consentState() === 'accepted') {
+            return (string) $_COOKIE['user_role'];
+        }
+        return null;
+    }
+
+    /**
      * Returns the current cookie-consent state:
      *   "accepted", "rejected", or null (no choice yet).
      */

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/AuthHelper.php';
 
 class AuthController
 {
@@ -34,6 +35,8 @@ class AuthController
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+        // If the visitor has valid auth cookies, promote them into the session.
+        AuthHelper::hydrateSessionFromCookies();
         $this->user = new User();
     }
 
@@ -61,20 +64,24 @@ class AuthController
             $this->user->password = $_POST['password'];
 
             if ($this->user->register()) {
+                $rememberMe = !empty($_POST['remember_me']);
+
                 $fullName = $this->buildFullName($this->user->first_name, $this->user->middle_name, $this->user->last_name);
                 if ($fullName === '') {
                     $fullName = $this->user->name;
                 }
 
-                // Save state to secure server session
-                $_SESSION['user_id'] = $this->user->id;
-                $_SESSION['user_name'] = $fullName;
-                $_SESSION['user_first_name'] = $this->user->first_name ?? '';
-                $_SESSION['user_middle_name'] = $this->user->middle_name ?? '';
-                $_SESSION['user_last_name'] = $this->user->last_name ?? '';
-                $_SESSION['user_email'] = $this->user->email;
-                $_SESSION['user_phone_num'] = $this->user->phone_num ?? null;
-                $_SESSION['user_role'] = $this->user->role ?: 'user';
+                // Persist to cookies + session via the central helper.
+                AuthHelper::persistLogin([
+                    'id'          => $this->user->id,
+                    'name'        => $fullName,
+                    'first_name'  => $this->user->first_name ?? '',
+                    'middle_name' => $this->user->middle_name ?? '',
+                    'last_name'   => $this->user->last_name ?? '',
+                    'email'       => $this->user->email,
+                    'phone_num'   => $this->user->phone_num ?? null,
+                    'role'        => $this->user->role ?: 'user',
+                ], $rememberMe);
 
                 header("Location: /Fresh Harvest/index.php");
                 exit();
@@ -92,22 +99,25 @@ class AuthController
             $this->user->password = $_POST['password'];
 
             if ($this->user->login()) {
+                $rememberMe = !empty($_POST['remember_me']);
+
                 $fullName = $this->buildFullName($this->user->first_name, $this->user->middle_name, $this->user->last_name);
                 if ($fullName === '') {
                     $fullName = $this->user->name;
                 }
 
-                // Save state to secure server session
-                $_SESSION['user_id'] = $this->user->id;
-                $_SESSION['user_name'] = $fullName;
-                $_SESSION['user_first_name'] = $this->user->first_name ?? '';
-                $_SESSION['user_middle_name'] = $this->user->middle_name ?? '';
-                $_SESSION['user_last_name'] = $this->user->last_name ?? '';
-                $_SESSION['user_email'] = $this->user->email;
-                $_SESSION['user_phone_num'] = $this->user->phone_num ?? null;
-                $_SESSION['user_role'] = $this->user->role;
+                AuthHelper::persistLogin([
+                    'id'          => $this->user->id,
+                    'name'        => $fullName,
+                    'first_name'  => $this->user->first_name ?? '',
+                    'middle_name' => $this->user->middle_name ?? '',
+                    'last_name'   => $this->user->last_name ?? '',
+                    'email'       => $this->user->email,
+                    'phone_num'   => $this->user->phone_num ?? null,
+                    'role'        => $this->user->role,
+                ], $rememberMe);
 
-                if ($_SESSION['user_role'] === 'admin') {
+                if (($_SESSION['user_role'] ?? '') === 'admin') {
                     header("Location: /Fresh Harvest/admin_dashboard.php");
                 } else {
                     header("Location: /Fresh Harvest/index.php");
@@ -122,19 +132,8 @@ class AuthController
 
     public function logout()
     {
-        // Clear all session memory keys
-        $_SESSION = [];
-        
-        // Destroy actual session storage unit
-        if (ini_get("session.use_cookies")) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
-            );
-        }
-        session_destroy();
-        
+        AuthHelper::clearAuthState();
+
         header("Location: /Fresh Harvest/index.php");
         exit();
     }

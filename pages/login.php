@@ -75,23 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 
             if (password_verify($password, $user['password']) || strcmp($password, $user['password']) == 0) {
-                setcookie("user_id", $user['id'], time() + (86400 * 7), "/");
-                syncUserCookie("user_name", $fullName);
-                setcookie("user_role", $user['role'], time() + (86400 * 7), "/");
-
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_name'] = $fullName;
-                $_SESSION['user_first_name'] = $user['first_name'] ?? '';
-                $_SESSION['user_middle_name'] = $user['middle_name'] ?? '';
-                $_SESSION['user_last_name'] = $user['last_name'] ?? '';
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_phone_num'] = $user['phone_num'] ?? null;
-                $_SESSION['user_role'] = $user['role'];
-
-                syncUserCookie("user_first_name", $user['first_name'] ?? '', $fullName !== '');
-                syncUserCookie("user_middle_name", $user['middle_name'] ?? '', $fullName !== '');
-                syncUserCookie("user_last_name", $user['last_name'] ?? '', $fullName !== '');
-                syncUserCookie("user_phone_num", isset($user['phone_num']) && $user['phone_num'] !== null ? (string) $user['phone_num'] : '', isset($user['phone_num']) && $user['phone_num'] !== null);
+                // Single source of truth — decides session-only vs cookies based
+                // on cookie_consent + remember_me.
+                AuthHelper::persistLogin($user, $rememberMe);
 
                 if ($user['role'] == 'admin') {
                     header("Location: ../admin_dashboard.php");
@@ -212,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <!-- META -->
                     <div class="meta-row">
                         <label>
-                            <input type="checkbox">
+                            <input type="checkbox" id="rememberMe" name="remember_me" value="1">
                             Remember me?
                         </label>
 
@@ -220,6 +206,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             Forgot password?
                         </a>
                     </div>
+
+                    <?php
+                    $consentState = AuthHelper::consentState();
+                    if ($consentState !== 'accepted'): ?>
+                        <p id="rememberHint" class="small text-muted mt-1 mb-0" style="font-size:.72rem;">
+                            <i class="bi bi-info-circle me-1"></i>
+                            You rejected non-essential cookies. Tick
+                            <strong>Remember me</strong> if you still want to stay logged in.
+                        </p>
+                    <?php endif; ?>
 
                     <!-- BUTTON -->
                     <button type="submit" class="btn-primary-auth" id="loginBtn">
@@ -249,6 +245,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         const loginBtn = document.getElementById('loginBtn');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
+        const rememberInput = document.getElementById('rememberMe');
+        const rememberHint = document.getElementById('rememberHint');
+
+        // If the user accepted cookies while sitting on the login page,
+        // promote their existing session to a remembered one.
+        function syncConsentToServer(consent) {
+            if (!consent || (consent !== 'accepted' && consent !== 'rejected')) return;
+            try {
+                const body = new URLSearchParams({ consent: consent });
+                fetch('<?= htmlspecialchars(dirname($_SERVER['SCRIPT_NAME']) . '/../cookie_consent_handler.php') ?>', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: body
+                }).catch(() => { /* best effort */ });
+            } catch (e) { /* ignore */ }
+        }
+
+        // Hide the helper hint as soon as the user ticks "Remember me"
+        // (or, if you accepted cookies earlier, it would never have rendered).
+        if (rememberInput && rememberHint) {
+            rememberInput.addEventListener('change', () => {
+                if (rememberInput.checked) {
+                    rememberHint.classList.add('d-none');
+                } else {
+                    rememberHint.classList.remove('d-none');
+                }
+            });
+        }
 
         loginBtn.addEventListener('click', (e) => {
 

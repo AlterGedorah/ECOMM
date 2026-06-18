@@ -198,18 +198,28 @@ SQL;
         $firstName = $a['first_name'] ?? '';
         $lastName  = $a['last_name'] ?? '';
         $phone     = $a['phone'] ?? '';
-        
+
         if (!empty($firstName) && !empty($lastName)) {
+            // The users.phone_num column is INT(11), so we MUST strip the
+            // phone down to digits only (no "+", spaces or dashes) before
+            // binding. "+63 917 555 4444" → "639175554444" (still fits INT(11)).
+            $phoneDigits = preg_replace('/\D+/', '', (string) $phone);
+            if ($phoneDigits === '') {
+                $phoneDigits = null;
+            }
+
             $updUser = $this->conn->prepare("UPDATE users SET first_name = ?, last_name = ?, phone_num = ? WHERE id = ?");
             if ($updUser) {
-                $updUser->bind_param("sssi", $firstName, $lastName, $phone, $userId);
+                $updUser->bind_param("sssi", $firstName, $lastName, $phoneDigits, $userId);
                 $updUser->execute();
                 $updUser->close();
-                
-                // Update session variables so the UI updates immediately without needing to relog
+
+                // Update session variables so the UI updates immediately without needing to relog.
+                // Keep the formatted version in the session (for display) but
+                // the DB now holds digits only.
                 $_SESSION['user_first_name'] = $firstName;
                 $_SESSION['user_last_name']  = $lastName;
-                $_SESSION['user_phone_num']  = $phone;
+                $_SESSION['user_phone_num']  = $phoneDigits;
                 $_SESSION['user_name']       = trim($firstName . ' ' . $lastName);
             }
         }
@@ -223,14 +233,16 @@ SQL;
         $landmark = $a['landmark'] ?? null;
 
         // Insert into proper distinct columns (city, region, etc.)
+        // Columns being bound: user_id (i), street_address, barangay, city,
+        // region, postal_code, landmark (6 s) → type string is "issssss" (7 chars).
         $stmt = $this->conn->prepare("
             INSERT INTO {$this->addresses_table}
                 (user_id, address_type, address_label, street_address, barangay, city, region, postal_code, landmark, is_default_shipping)
             VALUES (?, 'shipping', 'Home', ?, ?, ?, ?, ?, ?, 1)
         ");
-        
+
         if ($stmt) {
-            $stmt->bind_param("isssssss", $userId, $street, $barangay, $city, $region, $postal, $landmark);
+            $stmt->bind_param("issssss", $userId, $street, $barangay, $city, $region, $postal, $landmark);
             $stmt->execute();
             $newId = $stmt->insert_id;
             $stmt->close();

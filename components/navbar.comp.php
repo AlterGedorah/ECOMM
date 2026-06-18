@@ -1,6 +1,18 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
 
+// Make sure the session reflects any cookie-backed identity before the
+// navbar decides whether to show "Login/Register" or "My Profile/Logout".
+require_once __DIR__ . '/../controllers/AuthHelper.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+AuthHelper::hydrateSessionFromCookies();
+
+$navIsLoggedIn = AuthHelper::isLoggedIn();
+$navRole       = AuthHelper::userRole();
+$navUserName   = $_SESSION['user_name']
+    ?? ($_COOKIE['user_name'] ?? null);
 ?>
 <!-- Nav bar -->
 <nav class="fixed-top shadow-lg mb-0 navbar-fresh px-4 py-3" style="background-color: #1E3028;">
@@ -68,9 +80,16 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         </svg>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <?php if (isset($_COOKIE['user_id'])): ?>
-                            <li><a class="dropdown-item" href="profile.php">My Profile</a></li>  
-                            <?php if (($_SESSION['user_role'] ?? null) === 'admin'): ?>
+                        <?php if ($navIsLoggedIn): ?>
+                            <?php if (!empty($navUserName)): ?>
+                                <li>
+                                    <h6 class="dropdown-header text-truncate" style="max-width: 220px;">
+                                        <?= htmlspecialchars((string) $navUserName) ?>
+                                    </h6>
+                                </li>
+                            <?php endif; ?>
+                            <li><a class="dropdown-item" href="profile.php">My Profile</a></li>
+                            <?php if ($navRole === 'admin'): ?>
                                 <li><a class="dropdown-item" href="admin_dashboard.php">Admin Panel</a></li>
                             <?php endif; ?>
                             <li>

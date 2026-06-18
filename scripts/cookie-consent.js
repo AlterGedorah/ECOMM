@@ -37,6 +37,33 @@
         return null;
     }
 
+    /**
+     * Mirror the consent choice to the server so PHP can react on the next
+     * request (for example, to convert a session-only login into a
+     * cookie-backed one when the visitor accepts).
+     */
+    function syncConsentToServer(choice) {
+        try {
+            var body = 'consent=' + encodeURIComponent(choice);
+            var url = (window.CookieConsent && window.CookieConsent.endpoint)
+                ? window.CookieConsent.endpoint
+                : '/Fresh Harvest/cookie_consent_handler.php';
+
+            if (navigator.sendBeacon) {
+                var blob = new Blob([body], { type: 'application/x-www-form-urlencoded' });
+                navigator.sendBeacon(url, blob);
+                return;
+            }
+
+            fetch(url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            }).catch(function () { /* best effort */ });
+        } catch (e) { /* ignore */ }
+    }
+
     function hideBanner() {
         var banner = document.getElementById('cookieConsentBanner');
         if (banner) {
@@ -64,6 +91,9 @@
     function handleChoice(choice) {
         if (choice !== 'accepted' && choice !== 'rejected') return;
         setCookie(COOKIE_NAME, choice, COOKIE_DAYS);
+        // Tell the server about the new consent value so the next request
+        // (e.g. when the user logs in or reloads the page) can react to it.
+        syncConsentToServer(choice);
         hideBanner();
         if (choice === 'accepted') {
             onAccepted();

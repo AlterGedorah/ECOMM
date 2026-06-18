@@ -1,6 +1,9 @@
 <?php
-session_start();
-require_once '../config/Database.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../controllers/AuthHelper.php';
 
 $error = null;
 $success = null;
@@ -9,7 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password']; 
+    $confirm_password = $_POST['confirm_password'];
+    // "Remember me" on registration is equivalent to ticking the box on login.
+    $rememberMe = !empty($_POST['remember_me']); 
 
     // Validation using string functions
     if (empty($name)) {
@@ -53,9 +58,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->bind_param("ssss", $name, $email, $hashed_password, $role);
 
             if ($stmt->execute()) {
-                $_SESSION['user_id'] = $stmt->insert_id;
-                $_SESSION['user_name'] = $name;
-                $_SESSION['user_role'] = 'user';
+                $newUserId = $stmt->insert_id;
+
+                // Pull the freshly-created row so we have every field AuthHelper needs.
+                $rowStmt = $conn->prepare('SELECT id, name, first_name, middle_name, last_name, email, phone_num, role FROM users WHERE id = ?');
+                $rowStmt->bind_param('i', $newUserId);
+                $rowStmt->execute();
+                $newUser = $rowStmt->get_result()->fetch_assoc() ?: [
+                    'id'          => $newUserId,
+                    'name'        => $name,
+                    'first_name'  => '',
+                    'middle_name' => '',
+                    'last_name'   => '',
+                    'email'       => $email,
+                    'phone_num'   => null,
+                    'role'        => 'user',
+                ];
+                $rowStmt->close();
+
+                AuthHelper::persistLogin($newUser, $rememberMe);
+
                 $success = "Account created successfully! Redirecting...";
                 header("Refresh: 2; url=/Fresh Harvest/index.php");
             } else {
@@ -473,7 +495,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <div class="meta-row">
                     <label>
-                        <input type="checkbox" id="remember" /> Remember me?
+                        <input type="checkbox" id="remember" name="remember_me" value="1" /> Remember me?
                     </label>
                 </div>
 
