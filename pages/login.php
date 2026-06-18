@@ -1,6 +1,23 @@
 <?php
-session_start();
-require_once '../config/Database.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../controllers/AuthHelper.php';
+
+// If the user already accepted cookies in a previous visit, re-hydrate the
+// session so they don't have to log in again after closing the tab.
+AuthHelper::hydrateSessionFromCookies();
+
+if (!empty($_SESSION['user_id'])) {
+    $role = $_SESSION['user_role'] ?? 'user';
+    if ($role === 'admin') {
+        header('Location: ../admin_dashboard.php');
+    } else {
+        header('Location: ../index.php');
+    }
+    exit();
+}
 
 $error = null;
 
@@ -27,19 +44,11 @@ function buildFullName(?string $firstName, ?string $middleName, ?string $lastNam
     return trim(implode(' ', $parts));
 }
 
-function syncUserCookie(string $name, string $value, bool $persist = true): void
-{
-    if ($persist && $value !== '') {
-        setcookie($name, $value, time() + (86400 * 7), "/");
-        return;
-    }
-
-    setcookie($name, '', time() - 3600, "/");
-}
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
+    // "Remember me" overrides the cookie-consent decision for auth state only.
+    $rememberMe = !empty($_POST['remember_me']);
 
     // Validation
     if (empty($email)) {
@@ -169,10 +178,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
                 <?php endif; ?>
 
-                <button class="btn-google" type="button">
+                <!-- <button class="btn-google" type="button">
                     <img src="https://www.google.com/favicon.ico" alt="Google">
                     Sign in with Google
-                </button>
+                </button> -->
 
                 <div class="divider">
                     or login using account

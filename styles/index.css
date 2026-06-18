@@ -2,6 +2,19 @@
     margin-top: 4.3rem !important;
 }
 
+.hero-poster {
+    height: auto;
+    max-height: 420px;
+    object-fit: cover;
+    object-position: center;
+}
+
+.product-card-img {
+    height: 250px;
+    background-size: cover;
+    background-position: center;
+}
+
 .Background {
     background-image: url("../images/background.png");
     background-repeat: no-repeat;
@@ -21,4 +34,164 @@
 
 nav {
     background-color: #1E3028;
+}
+
+/* ============================================
+   RESPONSIVE STYLES — Mobile First Overrides
+   ============================================ */
+
+/* ---- Large phones / phablets (≤ 576px) ---- */
+@media (max-width: 576px) {
+    .banner {
+        margin-top: 4rem !important;
+    }
+
+    /* Hero poster */
+    .banner img {
+        height: auto !important;
+        max-height: 240px;
+        object-fit: cover;
+    }
+
+    /* Top "features" banner — stack vertically */
+    .mb-5.mt-5.px-5 .card {
+        flex-direction: column !important;
+        padding: 1rem !important;
+        margin: 0 0.5rem !important;
+        border-radius: 1.25rem !important;
+        gap: 0.75rem;
+    }
+
+    .mb-5.mt-5.px-5 .card > .d-flex {
+        width: 100%;
+        justify-content: flex-start !important;
+    }
+
+    .mb-5.mt-5.px-5 .card > div[style*="border: 1px solid green"] {
+        width: 100%;
+        height: 1px !important;
+        border: none !important;
+        border-top: 1px solid green !important;
+    }
+
+    /* Product sections */
+    .m-5 {
+        margin: 1.25rem !important;
+    }
+
+    .row.ms-5.me-5 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .display-5.h3 {
+        font-size: 1.5rem;
+    }
+
+    .card .p-4 h4 {
+        font-size: 1.1rem;
+    }
+
+    .product-card-img {
+        height: 180px;
+    }
+
+    .card .p-4 button.buy-btn,
+    .card .p-4 button[disabled] {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    /* Modal */
+    #productModal .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    #productModal .modal-body .row {
+        flex-direction: column;
+    }
+
+    #productModal .modal-body .col-md-6 {
+        width: 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    #productModal #modalImage {
+        max-height: 200px;
+    }
+
+    #productModal h2.display-6 {
+        font-size: 1.4rem;
+    }
+
+    #productModal .btn {
+        font-size: 0.95rem !important;
+        padding: 0.65rem 0.5rem !important;
+    }
+
+    #productModal .border.rounded-4.p-4 {
+        padding: 0.85rem !important;
+    }
+
+    /* Footer */
+    .container-fluid.border.py-5.bg-light {
+        padding: 1.5rem 1rem !important;
+    }
+
+    .container-fluid.border.py-5.bg-light .row {
+        row-gap: 1.5rem;
+    }
+
+    .container-fluid.px-5.d-flex.flex-row.py-3 {
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}
+
+/* ---- Tablets (577px – 768px) ---- */
+@media (min-width: 577px) and (max-width: 768px) {
+    .mb-5.mt-5.px-5 .card {
+        flex-wrap: wrap;
+        justify-content: center !important;
+        gap: 1rem;
+        padding: 1rem !important;
+    }
+
+    .mb-5.mt-5.px-5 .card > .d-flex {
+        width: 45%;
+    }
+
+    .mb-5.mt-5.px-5 .card > div[style*="border: 1px solid green"] {
+        display: none;
+    }
+
+    .m-5 {
+        margin: 2rem !important;
+    }
+
+    .row.ms-5.me-5 {
+        margin-left: 0.5rem !important;
+        margin-right: 0.5rem !important;
+    }
+
+    #productModal .modal-body .col-md-6 {
+        width: 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* ---- Small desktops (769px – 991px) ---- */
+@media (min-width: 769px) and (max-width: 991px) {
+    .mb-5.mt-5.px-5 .card > div[style*="border: 1px solid green"] {
+        display: none;
+    }
+
+    .mb-5.mt-5.px-5 .card {
+        gap: 0.5rem;
+        padding: 1rem !important;
+    }
 }

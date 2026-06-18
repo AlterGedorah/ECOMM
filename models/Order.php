@@ -50,7 +50,7 @@ class Order
      * @param int   $userId
      * @param array $cartItems  Associative array: product_id => quantity
      * @param array $productLookup  ['id' => ['id'=>..,'name'=>..,'price'=>..,'quantity'=>..]]
-     * @param array $address    [first_name,last_name,phone,street,barangay,city,province,postal_code,landmark]
+     * @param array $address    [address_id,first_name,last_name,phone,street,barangay,city,province,postal_code,landmark]
      * @param array $payment    [method, shipping_fee, discount, notes]
      * @return array            ['success'=>bool,'order_id'=>?,'order_number'=>?,'error'=>?]
      */
@@ -185,30 +185,70 @@ SQL;
     }
 
     /**
-     * Save or reuse a shipping address for the user.
+     * Save or reuse a shipping address for the user, and update user profile info.
      */
     private function saveAddress(int $userId, array $a): ?int
     {
-        $street = trim($a['street'] ?? '');
-        $barangay = trim($a['barangay'] ?? '');
-        $city = trim($a['city'] ?? '');
-        $province = trim($a['province'] ?? '');
-        $postal = trim($a['postal_code'] ?? '');
-        $fullStreet = trim("{$street}, {$barangay}, {$city}, {$province}", ', ');
+        // 1. Reuse existing address if provided
+        if (!empty($a['address_id']) && (int)$a['address_id'] > 0) {
+            return (int)$a['address_id'];
+        }
 
+        // 2. Update the user's Profile (Name and Phone)
+        $firstName = $a['first_name'] ?? '';
+        $lastName  = $a['last_name'] ?? '';
+        $phone     = $a['phone'] ?? '';
+        
+        if (!empty($firstName) && !empty($lastName)) {
+            $updUser = $this->conn->prepare("UPDATE users SET first_name = ?, last_name = ?, phone_num = ? WHERE id = ?");
+            if ($updUser) {
+                $updUser->bind_param("sssi", $firstName, $lastName, $phone, $userId);
+                $updUser->execute();
+                $updUser->close();
+                
+                // Update session variables so the UI updates immediately without needing to relog
+                $_SESSION['user_first_name'] = $firstName;
+                $_SESSION['user_last_name']  = $lastName;
+                $_SESSION['user_phone_num']  = $phone;
+                $_SESSION['user_name']       = trim($firstName . ' ' . $lastName);
+            }
+        }
+
+        // 3. Save Address to database
+        $street   = trim($a['street'] ?? '');
+        $barangay = trim($a['barangay'] ?? '');
+        $city     = trim($a['city'] ?? '');
+        $region   = trim($a['province'] ?? '');
+        $postal   = trim($a['postal_code'] ?? '');
+        $landmark = $a['landmark'] ?? null;
+
+        // Insert into proper distinct columns (city, region, etc.)
         $stmt = $this->conn->prepare("
             INSERT INTO {$this->addresses_table}
-                (user_id, address_type, address_label, street_address, barangay, postal_code, landmark, is_default_shipping)
-            VALUES (?, 'shipping', 'Home', ?, ?, ?, ?, 1)
+                (user_id, address_type, address_label, street_address, barangay, city, region, postal_code, landmark, is_default_shipping)
+            VALUES (?, 'shipping', 'Home', ?, ?, ?, ?, ?, ?, 1)
         ");
-        $landmark = $a['landmark'] ?? null;
-        $stmt->bind_param("issss", $userId, $fullStreet, $barangay, $postal, $landmark);
-        if (!$stmt->execute()) {
-            return null;
+        
+        if ($stmt) {
+            $stmt->bind_param("isssssss", $userId, $street, $barangay, $city, $region, $postal, $landmark);
+            $stmt->execute();
+            $newId = $stmt->insert_id;
+            $stmt->close();
+            return $newId;
+        } else {
+            // Fallback in case your database schema doesn't have 'city' and 'region' columns yet
+            $stmtFallback = $this->conn->prepare("
+                INSERT INTO {$this->addresses_table}
+                    (user_id, address_type, address_label, street_address, barangay, postal_code, landmark, is_default_shipping)
+                VALUES (?, 'shipping', 'Home', ?, ?, ?, ?, 1)
+            ");
+            $fullStreet = trim("{$street}, {$city}, {$region}", ', ');
+            $stmtFallback->bind_param("issss", $userId, $fullStreet, $barangay, $postal, $landmark);
+            $stmtFallback->execute();
+            $newId = $stmtFallback->insert_id;
+            $stmtFallback->close();
+            return $newId;
         }
-        $newId = $stmt->insert_id;
-        $stmt->close();
-        return $newId;
     }
 
     /**
@@ -281,14 +321,6 @@ SQL;
 
     /**
      * Cancel an order owned by the given user.
-     *
-     * Only orders in pre-fulfillment states may be cancelled:
-     *   - pending, confirmed, processing
-     *
-     * Performs the change inside a single transaction so the order header,
-     * status history, and (if already paid) payment status all stay consistent.
-     *
-     * @return array ['success' => bool, 'error' => string|null]
      */
     public function cancelOrder(int $orderId, int $userId, string $reason = ''): array
     {

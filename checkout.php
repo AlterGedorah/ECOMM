@@ -35,10 +35,11 @@ $database = new Database();
 $conn = $database->getConnection();
 
 $user_id = $_COOKIE['user_id'] ?? $_SESSION['user_id'] ?? 0;
-$stmt = $conn->prepare("SELECT * FROM addresses WHERE user_id = ? AND is_default_shipping = 1");
+
+// Fetch ALL addresses for the user, ordering so the default is first
+$stmt = $conn->prepare("SELECT * FROM addresses WHERE user_id = ? ORDER BY is_default_shipping DESC");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-// Use fetch_all to get a proper nestable list of rows
 $user_addresses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 ?>
@@ -54,6 +55,29 @@ $stmt->close();
   <link rel="stylesheet" href="styles/checkout.css">
   <link href="styles/cookie.css" rel="stylesheet">
   <link rel="icon" href="images/icon.png">
+  <style>
+    /* Clickable Address Cards */
+    .address-card {
+      border: 1px solid var(--border, #dee2e6);
+      border-radius: 8px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #fff;
+      display: block;
+    }
+    .address-card:hover {
+      border-color: #a3c2b1;
+    }
+    .address-card.selected {
+      border-color: #2f4a3a;
+      background-color: #f6fdf9;
+      box-shadow: 0 0 0 1px #2f4a3a;
+    }
+    .address-radio {
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
@@ -96,34 +120,43 @@ $stmt->close();
       <div class="row g-3">
 
         <div class="col-lg-8">
+          
           <div class="card-section">
             <div class="section-head">
               <div class="section-num">1</div>
               <p class="section-title mb-0">Shipping address</p>
             </div>
+            
             <?php if (!empty($user_addresses)): ?>
-              <input type="hidden" name="address_id" value="<?= (int) $user_addresses[0]['id'] ?>" />
-              
-              <?php foreach ($user_addresses as $addr): ?>
-                <div class="border rounded p-3 bg-white">
-                  <div class="d-flex justify-content-between align-items-start gap-3">
-                    <div>
-                      <div class="fw-semibold mb-1">
-                        <?= htmlspecialchars($data['user']['name'] ?? 'Customer') ?>
-                        <?php if ((int) $addr['is_default_shipping'] === 1): ?>
-                          <span class="badge bg-success ms-2">Default</span>
+              <div class="d-flex flex-column gap-3">
+                <?php foreach ($user_addresses as $index => $addr): ?>
+                  <?php $is_default = ((int)$addr['is_default_shipping'] === 1 || $index === 0); ?>
+                  
+                  <label class="address-card <?= $is_default ? 'selected' : '' ?>" id="addr-card-<?= $addr['id'] ?>" onclick="selectAddress('<?= $addr['id'] ?>')">
+                    <input type="radio" name="address_id" value="<?= (int) $addr['id'] ?>" class="address-radio" <?= $is_default ? 'checked' : '' ?> />
+                    
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                      <div>
+                        <div class="fw-semibold mb-1">
+                          <?= htmlspecialchars($data['user']['name'] ?? 'Customer') ?>
+                          <?php if ((int) $addr['is_default_shipping'] === 1): ?>
+                            <span class="badge bg-success ms-2">Default</span>
+                          <?php endif; ?>
+                        </div>
+                        <div class="text-muted small">
+                          <?= htmlspecialchars(trim(($addr['street_address'] ?? '') . ', ' . ($addr['barangay'] ?? '') . ', ' . ($addr['city'] ?? '') . ', ' . ($addr['region'] ?? '') . ', ' . ($addr['postal_code'] ?? ''), ', ')) ?>
+                        </div>
+                        <?php if (!empty($addr['landmark'])): ?>
+                          <div class="text-muted small">Landmark: <?= htmlspecialchars($addr['landmark']) ?></div>
                         <?php endif; ?>
                       </div>
-                      <div class="text-muted small">
-                        <?= htmlspecialchars(trim(($addr['street_address'] ?? '') . ', ' . ($addr['barangay'] ?? '') . ', ' . ($addr['city'] ?? '') . ', ' . ($addr['region'] ?? '') . ', ' . ($addr['postal_code'] ?? ''), ', ')) ?>
-                      </div>
-                      <?php if (!empty($addr['landmark'])): ?>
-                        <div class="text-muted small">Landmark: <?= htmlspecialchars($addr['landmark']) ?></div>
-                      <?php endif; ?>
+                      <i class="bi bi-check-circle-fill text-success <?= $is_default ? '' : 'd-none' ?>" id="addr-check-<?= $addr['id'] ?>"></i>
                     </div>
-                  </div>
-                </div>
-              <?php endforeach; ?>
+                  </label>
+                  
+                <?php endforeach; ?>
+              </div>
+
             <?php else: ?>
               <div class="row g-3">
                 <div class="col-sm-6">
@@ -140,8 +173,9 @@ $stmt->close();
                   <label>Phone number</label>
                   <div class="input-icon-wrap">
                     <i class="bi bi-phone"></i>
-                    <input type="tel" name="phone" class="form-control" placeholder="+63 9XX XXX XXXX" required />
+                    <input type="tel" name="phone" id="phoneInput" class="form-control" placeholder="+63 9XX XXX XXXX" required />
                   </div>
+                  <div class="text-danger small mt-1 d-none" id="phoneError">Please enter a valid PH mobile number (+63 or 09).</div>
                 </div>
                 <div class="col-sm-6">
                   <label>Province / Region</label>
@@ -178,9 +212,8 @@ $stmt->close();
                     placeholder="e.g. Leave at door, gate code #123" />
                 </div>
               </div>
-
-
             <?php endif; ?>
+
             <div class="divider mt-4"></div>
             <p class="section-title mb-2" style="font-size:.88rem;">Shipping method</p>
 
@@ -210,7 +243,6 @@ $stmt->close();
               <span class="ship-price text-success">Free</span>
             </label>
           </div>
-          <!-- ── Section 2: Cart items ── -->
           <div class="card-section">
             <div class="section-head">
               <div class="section-num">2</div>
@@ -247,7 +279,6 @@ $stmt->close();
             </div>
           </div>
 
-          <!-- ── Section 3: Voucher ── -->
           <div class="card-section">
             <div class="section-head">
               <div class="section-num">3</div>
@@ -313,7 +344,6 @@ $stmt->close();
             </div>
           </div>
 
-          <!-- ── Section 4: Payment ── -->
           <div class="card-section">
             <div class="section-head">
               <div class="section-num">4</div>
@@ -442,15 +472,11 @@ $stmt->close();
               </div>
             </div>
 
-            
-
             <input type="hidden" name="notes" id="orderNotes" value="" />
             <input type="hidden" name="place_order" value="1" />
           </div>
 
-        </div><!-- /col-lg-8 -->
-
-        <div class="col-lg-4">
+        </div><div class="col-lg-4">
           <div class="summary-card">
             <div class="summary-header d-flex align-items-center gap-2">
               <i class="bi bi-receipt"></i> Order summary
@@ -477,8 +503,7 @@ $stmt->close();
           </div>
         </div>
 
-      </div><!-- /row -->
-    </form>
+      </div></form>
   </div>
 
   <script>
@@ -494,6 +519,22 @@ $stmt->close();
     br = document.getElementById("radio");
     br.classList.add('active');
     br.checked = true;
+
+    /* ─── Address Selection ─── */
+    function selectAddress(id) {
+      document.querySelectorAll('.address-card').forEach(card => {
+        card.classList.remove('selected');
+        const checkIcon = card.querySelector('.bi-check-circle-fill');
+        if (checkIcon) checkIcon.classList.add('d-none');
+      });
+      
+      const selectedCard = document.getElementById('addr-card-' + id);
+      selectedCard.classList.add('selected');
+      
+      const selectedCheck = document.getElementById('addr-check-' + id);
+      if (selectedCheck) selectedCheck.classList.remove('d-none');
+    }
+
     /* ─── Quantity stepper ─── */
     function changeQty(id, delta) {
       const max = stocks[id] || 99;
@@ -614,18 +655,47 @@ $stmt->close();
       </div>`).join('');
     }
 
+    /* ─── LIVE PHONE VALIDATION ─── */
+    const phoneInput = document.getElementById('phoneInput');
+    const phoneRegex = /^(?:\+63|0)9\d{9}$/;
+
+    if (phoneInput) {
+        // 1. Show error when user clicks away (blur) if invalid
+        phoneInput.addEventListener('blur', function() {
+            const phoneVal = this.value.replace(/[\s-]/g, '');
+            if (phoneVal !== '' && !phoneRegex.test(phoneVal)) {
+                this.classList.add('is-invalid', 'border-danger');
+                document.getElementById('phoneError').classList.remove('d-none');
+            }
+        });
+
+        // 2. Remove error instantly as soon as the user types a correct format
+        phoneInput.addEventListener('input', function() {
+            const phoneVal = this.value.replace(/[\s-]/g, '');
+            if (phoneVal === '' || phoneRegex.test(phoneVal)) {
+                this.classList.remove('is-invalid', 'border-danger');
+                document.getElementById('phoneError').classList.add('d-none');
+            }
+        });
+    }
+
     /* ─── Submit handler ─── */
     document.getElementById('checkoutForm').addEventListener('submit', function (e) {
-      const required = ['phone', 'province', 'city', 'barangay', 'street', 'postal_code'];
-      for (const f of required) {
-        const el = this.elements[f];
-        if (el && !el.value.trim()) {
-          e.preventDefault();
-          el.focus();
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Final Phone Check before submitting
+      if (phoneInput && !phoneInput.closest('div[style*="display: none"]')) { // Only check if manual input is visible
+        const phoneVal = phoneInput.value.replace(/[\s-]/g, '');
+
+        if (!phoneRegex.test(phoneVal)) {
+          e.preventDefault(); 
+          phoneInput.classList.add('is-invalid', 'border-danger');
+          document.getElementById('phoneError').classList.remove('d-none');
+          phoneInput.focus();
+          phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
           return false;
         }
       }
+
       const btn = document.getElementById('placeOrderBtn');
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" style="border-color:#fff;border-right-color:transparent;"></span>Processing…';
@@ -636,7 +706,6 @@ $stmt->close();
     recalc();
   </script>
 
-  <!-- Cookie consent banner -->
   <?php include __DIR__ . '/components/cookie/cookie-banner.php'; ?>
   <script src="scripts/cookie-consent.js"></script>
 </body>

@@ -29,7 +29,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 
     <!-- Hero section (same) -->
     <div class="banner container text-light p-4 overflow-hidden">
-        <img src="images/Poster.png" alt="Hero" class="img-fluid w-100 h-80" object-position: center;>
+        <img src="images/Poster.png" alt="Hero" class="img-fluid w-100 hero-poster">
     </div>
 
     <!-- Top Banner -->
@@ -134,7 +134,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                     <?php $productUnit = trim((string) ($product['unit'] ?? '')); ?>
                     <div class="col-12 col-md-6 col-lg-4 col-xl-3 mt-3">
                         <div class="card rounded-4 overflow-hidden h-100">
-                            <div style="height: 250px; background-image: url('<?= $product['image_url'] ?? 'placeholder.jpg' ?>'); background-size: cover; background-position: center; cursor: pointer;"
+                            <div class="product-card-img" style="background-image: url('<?= $product['image_url'] ?? 'placeholder.jpg' ?>'); cursor: pointer;"
                                 data-bs-toggle="modal" data-bs-target="#productModal" data-id="<?= $product['id'] ?>"
                                 data-name="<?= htmlspecialchars($product['name']) ?>" data-price="<?= $product['current_price'] ?>"
                                 data-quantity="<?= $product['quantity'] ?>"

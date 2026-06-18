@@ -74,7 +74,7 @@ class CheckoutController
         $userId = (int)$_SESSION['user_id'];
 
         // ── 1. Validate address ──────────────────────────────────────────
-       $addressId = isset($_POST['address_id']) ? (int)$_POST['address_id'] : 0;
+        $addressId = isset($_POST['address_id']) ? (int)$_POST['address_id'] : 0;
         
         if ($addressId === 0) {
             $required = ['first_name','last_name','phone','street','barangay','city','province','postal_code'];
@@ -85,7 +85,12 @@ class CheckoutController
             }
         }
 
+        // ADDED: Capture first_name, last_name, and phone from the manual input form
         $address = [
+            'address_id'  => $addressId, 
+            'first_name'  => trim($_POST['first_name'] ?? ''),
+            'last_name'   => trim($_POST['last_name']  ?? ''),
+            'phone'       => trim($_POST['phone']      ?? ''),
             'street'      => trim($_POST['street']      ?? ''),
             'barangay'    => trim($_POST['barangay']    ?? ''),
             'city'        => trim($_POST['city']        ?? ''),

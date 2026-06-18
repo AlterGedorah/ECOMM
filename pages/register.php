@@ -395,7 +395,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <div class="page-wrapper">
 
-        <!-- LEFT hero -->
         <div class="hero-pane">
             <img src="../images/crops.jpg" alt="Rice field with hand holding grain stalks" />
             <div class="hero-text">
@@ -405,7 +404,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         </div>
 
-        <!-- RIGHT auth panel -->
         <div class="auth-pane">
             <nav class="auth-nav">
               <a href="../index.php">
@@ -446,21 +444,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
                 <?php endif; ?>
 
-                <form method="POST" action="register.php" id="registerForm">
-                <!-- Username -->
+                <form method="POST" action="register.php" id="registerForm" novalidate>
                 <div class="mb-field">
                     <label class="field-label" for="username">Username</label>
                     <input id="username" name="name" class="auth-input" type="text" placeholder="" autocomplete="username" />
                 </div>
 
-                <!-- Email -->
                 <div class="mb-field">
                     <label class="field-label" for="email">Email</label>
                     <input id="email" name="email" class="auth-input" type="email" placeholder="mail@example.com"
                         autocomplete="email" />
                 </div>
 
-                <!-- Password -->
                 <div class="mb-field">
                     <label class="field-label" for="password">Password</label>
                     <input id="password" name="password" class="auth-input" type="password" placeholder="••••••••"
@@ -470,21 +465,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
                 </div>
 
-                <!-- Confirm Password -->
                 <div>
                     <label class="field-label" for="confirmPassword">Confirm password</label>
                     <input id="confirmPassword" name="confirm_password" class="auth-input" type="password" placeholder=""
                         autocomplete="new-password" />
                 </div>
 
-                <!-- Remember -->
                 <div class="meta-row">
                     <label>
                         <input type="checkbox" id="remember" /> Remember me?
                     </label>
                 </div>
 
-                <!-- Register btn -->
                 <button class="btn-primary-auth" type="submit" id="registerBtn">Register</button>
 
                 </form>
@@ -508,6 +500,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         const passwordInput = document.getElementById('password');
         const confirmInput = document.getElementById('confirmPassword');
         const strengthFill = document.getElementById('strengthFill');
+
+        // Regex for standard email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         // password strength meter
         passwordInput.addEventListener('input', () => {
@@ -534,14 +529,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ], { duration: 300, easing: 'ease' });
         }
 
-        // clear error on type
-        [usernameInput, emailInput, passwordInput, confirmInput].forEach(inp => {
+        // clear error on type for standard inputs
+        [usernameInput, passwordInput, confirmInput].forEach(inp => {
             inp.addEventListener('input', () => inp.classList.remove('error'));
         });
 
+        // LIVE EMAIL VALIDATION
+        // Check format when user leaves the email field
+        emailInput.addEventListener('blur', () => {
+            const val = emailInput.value.trim();
+            if (val !== '' && !emailRegex.test(val)) {
+                emailInput.classList.add('error');
+            }
+        });
+
+        // Remove error live if the user fixes it while typing
+        emailInput.addEventListener('input', () => {
+            const val = emailInput.value.trim();
+            if (val === '' || emailRegex.test(val)) {
+                emailInput.classList.remove('error');
+            }
+        });
+
+        // Form Submit Validation
         document.getElementById('registerForm').addEventListener('submit', (e) => {
             let valid = true;
 
+            // Empty checks
             [usernameInput, emailInput, passwordInput, confirmInput].forEach(inp => {
                 if (!inp.value.trim()) {
                     inp.classList.add('error');
@@ -550,6 +564,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             });
 
+            // Email format check
+            const emailVal = emailInput.value.trim();
+            if (emailVal !== '' && !emailRegex.test(emailVal)) {
+                emailInput.classList.add('error');
+                shake(emailInput);
+                valid = false;
+            }
+
+            // Password match
             if (passwordInput.value && confirmInput.value &&
                 passwordInput.value !== confirmInput.value) {
                 confirmInput.classList.add('error');
