@@ -198,7 +198,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 
                             <?php if ($has_insufficient): ?>
                                 <div class="alert alert-warning mt-3 small">
-                                    ⚠️ Some items have insufficient stock. Please update quantities before checking out.
+                                    Some items have insufficient stock. Please update quantities before checking out.
                                 </div>
                                 <button class="btn btn-secondary w-100 mt-3" disabled>
                                     Checkout Unavailable

@@ -117,7 +117,7 @@ $products = $productController->adminIndex();
                                     <input type="file" name="image" class="form-control" accept="image/*">
                                 </div>
                                 <div class="col-md-12">
-                                    <button type="submit" class="btn btn-success">➕ Add Product</button>
+                                    <button type="submit" class="btn btn-success">Add Product</button>
                                 </div>
                             </div>
                         </form>
@@ -202,15 +202,15 @@ $products = $productController->adminIndex();
                                                 </td>
 
                                                 <td>
-                                                    <button type="submit" class="btn btn-warning btn-sm">✏️ Update</button>
+                                                    <button type="submit" class="btn btn-warning btn-sm">Update</button>
                                             </form>
                                             
                                             <form method="POST" action="/Fresh Harvest/admin_dashboard.php"
                                                 style="display: inline-block; margin-left: 5px;"
-                                                onsubmit="return confirm('⚠️ PERMANENT DELETE: <?= htmlspecialchars($product['name']) ?>?')">
+                                                onsubmit="return confirm('PERMANENT DELETE: <?= htmlspecialchars($product['name']) ?>?')">
                                                 <input type="hidden" name="action" value="delete">
                                                 <input type="hidden" name="id" value="<?= $product['id'] ?>">
-                                                <button type="submit" class="btn btn-danger btn-sm">🗑️ Delete</button>
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                                             </form>
                                             </td>
                                         </tr>

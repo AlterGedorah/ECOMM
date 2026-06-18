@@ -22,12 +22,12 @@ class CheckoutController
         $this->user    = new User();
     }
 
-    /**
-     * Prepare the data required to render the checkout page:
-     *  - current cart items
-     *  - subtotal
-     *  - whether the user is logged in
-     */
+    // 
+    //  Prepare the data required to render the checkout page:
+    //   - current cart items
+    //   - subtotal
+    //   - whether the user is logged in
+    // 
     public function prepareCheckoutPage(): array
     {
         $items   = $this->cart->getItems();
