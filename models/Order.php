@@ -18,6 +18,7 @@ class Order
     public $payment_status;
     public $payment_method;
     public $payment_reference;
+    public $payment_proof;
     public $subtotal;
     public $delivery_fee;
     public $tax_amount;
@@ -90,27 +91,32 @@ class Order
             // 3. Create order header
             $orderNumber = self::generateOrderNumber();
             $paymentMethod = $this->mapPaymentMethod($payment['method'] ?? 'cod');
+            $paymentProof = $payment['payment_proof'] ?? null;
 
             $sql = <<<SQL
 INSERT INTO {$this->orders_table}
     (order_number, customer_id, shipping_address_id, billing_address_id,
-     order_status, payment_status, payment_method,
+     order_status, payment_status, payment_method, payment_proof,
      subtotal, delivery_fee, tax_amount, discount_amount, total_amount,
      customer_notes, estimated_delivery_date)
-VALUES (?, ?, ?, NULL, 'pending', 'unpaid', ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, NULL, 'pending', 'unpaid', ?, ?, ?, ?, ?, ?, ?, ?, ?)
 SQL;
             $stmt = $this->conn->prepare($sql);
             $eta = date('Y-m-d', strtotime('+3 business days'));
             // Normalize values into variables so they can be passed by reference to bind_param
             $notes = $payment['notes'] ?? null;
             $taxAmount = 0.0; // no tax calculation for now
-            $types = "siisdddddss"; // order_number(s), customer_id(i), shipping_address_id(i), payment_method(s), subtotal(d), delivery_fee(d), tax_amount(d), discount_amount(d), total_amount(d), customer_notes(s), eta(s)
+            // order_number(s), customer_id(i), shipping_address_id(i), payment_method(s), payment_proof(s),
+            // subtotal(d), delivery_fee(d), tax_amount(d), discount_amount(d), total_amount(d),
+            // customer_notes(s), eta(s)
+            $types = "siissdddddss";
             $stmt->bind_param(
                 $types,
                 $orderNumber,
                 $userId,
                 $addressId,
                 $paymentMethod,
+                $paymentProof,
                 $subtotal,
                 $shippingFee,
                 $taxAmount,

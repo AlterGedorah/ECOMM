@@ -157,8 +157,7 @@ $stmt->close();
       </div>
     <?php endif; ?>
 
-    <form method="POST" id="checkoutForm" novalidate>
-      <!-- JS validation banner; shown when something is missing/invalid -->
+    <form method="POST" id="checkoutForm" enctype="multipart/form-data" novalidate>
       <div id="formErrorBanner" role="alert">
         <i class="bi bi-exclamation-triangle-fill"></i>
         <span id="formErrorBannerText">Please fix the highlighted fields below.</span>
@@ -483,10 +482,43 @@ $stmt->close();
                 <div
                   style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:var(--radius-sm);padding:.85rem;border:1px solid var(--border);">
                   <i class="bi bi-qr-code-scan" style="font-size:2rem;color:var(--forest);"></i>
-                  <div>
+                  <div class="flex-grow-1">
                     <p style="font-weight:600;font-size:.88rem;margin:0;">Scan QR or enter number</p>
                     <p style="font-size:.78rem;color:var(--text-muted);margin:0;">A payment request will be sent to your
                       GCash app after confirming the order.</p>
+                  </div>
+                  <button type="button" class="btn btn-outline-primary btn-sm flex-shrink-0"
+                          id="gcashQrShowBtn"
+                          onclick="openGcashQrModal()">
+                    <i class="bi bi-qr-code me-1"></i>View QR Code
+                  </button>
+                </div>
+
+                <div class="gcash-proof-block mt-3" id="gcashProofBlock">
+                  <label for="gcashProofInput" class="d-block fw-semibold mb-1" style="font-size:.85rem;">
+                    Proof of payment <span class="text-danger">*</span>
+                  </label>
+                  <p class="text-muted" style="font-size:.78rem;margin:0 0 .5rem 0;">
+                    Upload a screenshot of your successful GCash transfer (PNG, JPG, WEBP, or GIF — max 5&nbsp;MB).
+                  </p>
+                  <input
+                    type="file"
+                    id="gcashProofInput"
+                    name="payment_proof"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    class="form-control"
+                    data-field="payment_proof"
+                    data-gcash-only="1" />
+                  <div id="gcashProofPreview" class="mt-2" style="display:none;">
+                    <img id="gcashProofImg" src="#" alt="GCash payment proof preview"
+                         style="max-width:180px;max-height:180px;border-radius:8px;border:1px solid var(--border);" />
+                    <button type="button" id="gcashProofClear" class="btn btn-link btn-sm p-0 ms-2"
+                            style="font-size:.78rem;">
+                      <i class="bi bi-x-circle"></i> Remove
+                    </button>
+                  </div>
+                  <div class="field-error-msg" data-error-for="payment_proof">
+                    Please attach a screenshot of your GCash payment before placing the order.
                   </div>
                 </div>
               </div>
@@ -563,8 +595,43 @@ $stmt->close();
       </div></form>
   </div>
 
+  
+
+  <div class="modal fade" id="gcashQrModal" tabindex="-1" aria-hidden="true" aria-labelledby="gcashQrModalTitle">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+      <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+        <div class="modal-header" style="background:#0073e6;color:#fff;border:0;">
+          <h5 class="modal-title" id="gcashQrModalTitle">
+            <i class="bi bi-qr-code-scan me-1"></i>Fresh Harvest GCash QR
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center" style="background:#fafbfc;">
+          <img id="gcashQrModalImg"
+               src="images/gcash_qr.jpg"
+               alt="Fresh Harvest GCash QR code"
+               style="max-width:100%;max-height:60vh;border-radius:10px;border:1px solid #e9ecef;background:#fff;padding:10px;" />
+          <p class="small text-muted mt-3 mb-0">
+            Scan this QR with your GCash app to send the exact order total, then upload a screenshot of the receipt below.
+          </p>
+        </div>
+        <div class="modal-footer" style="justify-content:center;border:0;background:#fafbfc;">
+          <a href="images/gcash_qr.jpg" download class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-download me-1"></i>Download
+          </a>
+          <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg me-1"></i>Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <?php include __DIR__ . '/components/cookie/cookie-banner.php'; ?>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="scripts/cookie-consent.js"></script>
   <script>
-     /* ─── LIVE PHONE VALIDATION ─── */
+       /* ─── LIVE PHONE VALIDATION ─── */
     const phoneInput = document.getElementById('phoneInput');
     const phoneRegex = /^(?:\+63|0)9\d{9}$/;
     const zipRegex   = /^\d{4}$/;
@@ -934,7 +1001,7 @@ $stmt->close();
                          'Poblacion Barangay 8', 'Sala', 'Sambat', 'San Jose',
                          'Santol', 'Santor', 'Sulpoc', 'Suplang', 'Talaga',
                          'Tinurik', 'Trapiche', 'Ulango', 'Wawa'],
-      'Sto. Tomas':     ['Poblacion I', 'Poblacion II', 'Poblacion III', 'Poblacion IV',
+      'Sto. Tomas':      ['Poblacion I', 'Poblacion II', 'Poblacion III', 'Poblacion IV',
                          'San Agustin', 'San Antonio', 'San Bartolome', 'San Felix',
                          'San Fernando', 'San Francisco', 'San Isidro', 'San Joaquin',
                          'San Jose', 'San Juan', 'San Luis', 'San Miguel', 'San Pablo',
@@ -1142,7 +1209,7 @@ $stmt->close();
     }
 
 
-   
+    
 
     // Returns the first currently visible element with [data-field="X"]
     function fieldEl(name) {
@@ -1294,6 +1361,22 @@ $stmt->close();
         }
       }
 
+      // 4b. GCash-specific validation — proof-of-payment image is required.
+      if (payChosen.value === 'gcash') {
+        const proofEl = document.getElementById('gcashProofInput');
+        const hasFile = proofEl && proofEl.files && proofEl.files.length > 0;
+        if (!hasFile) {
+          setError('payment_proof', 'Please attach a screenshot of your GCash payment.');
+          showBanner('Please attach your GCash payment proof to continue.');
+          problems++;
+          if (!firstInvalid) firstInvalid = proofEl;
+        }
+      } else {
+        // For other payment methods, clear any lingering GCash error so
+        // switching payment methods doesn't leave a stale red flag.
+        if (typeof clearError === 'function') clearError('payment_proof');
+      }
+
       // 5. Cart must not be empty (defense in depth — the page also redirects)
       const totalItems = Object.values(qtys).reduce((a, b) => a + b, 0);
       if (totalItems <= 0) {
@@ -1332,13 +1415,73 @@ $stmt->close();
       }
     });
 
+    /* ─── GCash proof-of-payment upload ─── */
+    const gcashProofInput   = document.getElementById('gcashProofInput');
+    const gcashProofPreview = document.getElementById('gcashProofPreview');
+    const gcashProofImg     = document.getElementById('gcashProofImg');
+    const gcashProofClear   = document.getElementById('gcashProofClear');
+    const GCASH_MAX_BYTES   = 5 * 1024 * 1024;
+    const GCASH_ALLOWED     = ['image/png','image/jpeg','image/webp','image/gif'];
+
+    function clearGcashProofPreview() {
+      if (gcashProofPreview) gcashProofPreview.style.display = 'none';
+      if (gcashProofImg) gcashProofImg.removeAttribute('src');
+    }
+
+    if (gcashProofInput) {
+      gcashProofInput.addEventListener('change', function () {
+        const f = this.files && this.files[0];
+        if (!f) {
+          clearGcashProofPreview();
+          return;
+        }
+        if (f.size > GCASH_MAX_BYTES) {
+          setError('payment_proof', 'Payment proof is too large (max 5 MB).');
+          this.value = '';
+          clearGcashProofPreview();
+          return;
+        }
+        if (GCASH_ALLOWED.indexOf(f.type) === -1) {
+          setError('payment_proof', 'Payment proof must be a PNG, JPG, WEBP, or GIF image.');
+          this.value = '';
+          clearGcashProofPreview();
+          return;
+        }
+        clearError('payment_proof');
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          gcashProofImg.src = ev.target.result;
+          gcashProofPreview.style.display = '';
+        };
+        reader.readAsDataURL(f);
+      });
+    }
+
+    if (gcashProofClear) {
+      gcashProofClear.addEventListener('click', function () {
+        if (gcashProofInput) gcashProofInput.value = '';
+        clearGcashProofPreview();
+        clearError('payment_proof');
+      });
+    }
+
+    /* ─── GCash QR Code lightbox ─── */
+    const gcashQrModalEl = document.getElementById('gcashQrModal');
+    let gcashQrModalInstance = null;
+    if (gcashQrModalEl && window.bootstrap) {
+      gcashQrModalInstance = new bootstrap.Modal(gcashQrModalEl);
+    }
+    function openGcashQrModal() {
+      // Auto-switch the user to the GCash tab if they picked a different
+      // payment method — saves them a click.
+      if (typeof selectPay === 'function') selectPay('pay-gcash');
+      if (gcashQrModalInstance) gcashQrModalInstance.show();
+    }
+
     /* ─── Init ─── */
     renderSummaryItems();
     recalc();
   </script>
-
-  <?php include __DIR__ . '/components/cookie/cookie-banner.php'; ?>
-  <script src="scripts/cookie-consent.js"></script>
 </body>
 
 </html>

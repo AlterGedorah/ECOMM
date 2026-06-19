@@ -157,7 +157,7 @@ function paymentStatusBadge(string $s): string {
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Price (₱)</label>
-                                    <input type="number" step="0.01" name="price" class="form-control" required>
+                                    <input type="number" min="0" step="0.01" name="price" class="form-control" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Stock Quantity</label>
@@ -190,10 +190,65 @@ function paymentStatusBadge(string $s): string {
                 </div>
 
                 <div class="card shadow" id="products">
-                    <div class="card-header bg-info text-white">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <h4 class="mb-0">All Products</h4>
+                        <span class="badge bg-light text-dark" id="productCountBadge">
+                            <?= count($products) ?> item<?= count($products) === 1 ? '' : 's' ?>
+                        </span>
                     </div>
                     <div class="card-body">
+                        <!-- Product search / filter -->
+                        <form method="GET" action="admin_dashboard.php#products" class="row g-2 mb-3" id="productSearchForm">
+                            <div class="col-md-4">
+                                <input type="search" name="product_search"
+                                    class="form-control form-control-sm"
+                                    placeholder="Search by product name…"
+                                    value="<?= htmlspecialchars($_GET['product_search'] ?? '') ?>"
+                                    autocomplete="off">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="product_category" class="form-select form-select-sm">
+                                    <?php $pc = $_GET['product_category'] ?? 'all'; ?>
+                                    <option value="all"       <?= $pc==='all'?'selected':'' ?>>All categories</option>
+                                    <option value="vegetables"<?= $pc==='vegetables'?'selected':'' ?>>Fresh Vegetables</option>
+                                    <option value="fruits"    <?= $pc==='fruits'?'selected':'' ?>>Fresh Fruits</option>
+                                    <option value="grains"    <?= $pc==='grains'?'selected':'' ?>>Grains / Cereals</option>
+                                    <option value="cash_crops"<?= $pc==='cash_crops'?'selected':'' ?>>Cash Crops</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex gap-2">
+                                <button class="btn btn-sm btn-success w-100" type="submit">Search</button>
+                            </div>
+                            <div class="col-md-2">
+                                <?php $hasActiveSearch = ($_GET['product_search'] ?? '') !== '' || (($_GET['product_category'] ?? 'all') !== 'all'); ?>
+                                <?php if ($hasActiveSearch): ?>
+                                    <a href="admin_dashboard.php#products" class="btn btn-sm btn-outline-secondary w-100">Clear</a>
+                                <?php else: ?>
+                                    <button class="btn btn-sm btn-outline-secondary w-100" type="button" disabled>Clear</button>
+                                <?php endif; ?>
+                            </div>
+                        </form>
+
+                        <?php if ($hasActiveSearch): ?>
+                            <div class="small text-muted mb-2">
+                                <?php if (($_GET['product_search'] ?? '') !== ''): ?>
+                                    Showing results for
+                                    <strong>"<?= htmlspecialchars($_GET['product_search']) ?>"</strong>
+                                <?php endif; ?>
+                                <?php if (($_GET['product_category'] ?? 'all') !== 'all'): ?>
+                                    <?= ($_GET['product_search'] ?? '') !== '' ? ' in ' : 'Showing ' ?>
+                                    <strong><?= htmlspecialchars(ucwords(str_replace('_', ' ', $_GET['product_category']))) ?></strong>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                            <?php if (empty($products)): ?>
+                            <div class="alert alert-warning mb-0" role="alert">
+                                No products match your search.
+                                <?php if ($hasActiveSearch): ?>
+                                    <a href="admin_dashboard.php#products" class="alert-link">Clear the filter</a> to see all products.
+                                <?php endif; ?>
+                            </div>
+                        <?php else: ?>
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover">
                                 <thead class="table-dark">
@@ -237,7 +292,7 @@ function paymentStatusBadge(string $s): string {
                                             </td>
                                             
                                             <td>
-                                                <input type="number" step="0.01" name="price" form="<?= $formId ?>" value="<?= $product['current_price'] ?>"
+                                                <input type="number" min="0" step="0.01" name="price" form="<?= $formId ?>" value="<?= $product['current_price'] ?>"
                                                     class="form-control form-control-sm" style="width: 100px;" required>
                                             </td>
                                             
@@ -282,6 +337,7 @@ function paymentStatusBadge(string $s): string {
                                 </tbody>
                             </table>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -387,6 +443,11 @@ function paymentStatusBadge(string $s): string {
                                                 <td><span class="badge bg-secondary"><?= $itemCount ?></span></td>
                                                 <td><strong>₱<?= number_format((float)$o['total_amount'], 2) ?></strong>
                                                     <br><small class="text-muted"><?= htmlspecialchars(str_replace('_',' ', $o['payment_method'])) ?></small>
+                                                    <?php if (!empty($o['payment_proof'])): ?>
+                                                        <br><span class="badge bg-info text-dark mt-1" title="GCash payment proof attached">
+                                                            <i class="bi bi-paperclip"></i> Proof
+                                                        </span>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td><span class="badge <?= paymentStatusBadge($o['payment_status']) ?>"><?= htmlspecialchars($o['payment_status']) ?></span></td>
                                                 <td><span class="badge <?= orderStatusBadge($o['order_status']) ?>"><?= htmlspecialchars($o['order_status']) ?></span></td>
@@ -496,6 +557,45 @@ function paymentStatusBadge(string $s): string {
                                                         </div>
                                                     </div>
 
+                                                    <?php
+                                                        // Only display the proof block when the order was paid
+                                                        // via GCash AND a file was attached. We resolve the path
+                                                        // against the project root and check it actually exists
+                                                        // on disk so missing files don't show a broken icon.
+                                                        $proofRel = $o['payment_proof'] ?? '';
+                                                        $proofAbs = $proofRel !== ''
+                                                            ? realpath(__DIR__ . DIRECTORY_SEPARATOR . $proofRel)
+                                                            : false;
+                                                        $hasProof = ($proofRel !== '' && $proofAbs !== false && is_file($proofAbs));
+                                                    ?>
+                                                    <?php if ($hasProof): ?>
+                                                        <div class="mt-3">
+                                                            <h6 class="mb-2">
+                                                                <i class="bi bi-image me-1"></i>GCash payment proof
+                                                            </h6>
+                                                            <a href="<?= htmlspecialchars($proofRel) ?>" target="_blank" rel="noopener">
+                                                                <img
+                                                                    src="<?= htmlspecialchars($proofRel) ?>"
+                                                                    alt="GCash payment proof for order <?= htmlspecialchars($o['order_number']) ?>"
+                                                                    class="img-fluid rounded border"
+                                                                    style="max-height:280px;cursor:zoom-in;background:#fafafa;" />
+                                                            </a>
+                                                            <div class="small text-muted mt-1">
+                                                                <i class="bi bi-paperclip me-1"></i>
+                                                                <?= htmlspecialchars(basename($proofRel)) ?>
+                                                                <span class="ms-2">·</span>
+                                                                <a href="<?= htmlspecialchars($proofRel) ?>" target="_blank" rel="noopener" class="ms-2">
+                                                                    Open in new tab <i class="bi bi-box-arrow-up-right"></i>
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    <?php elseif ($o['payment_method'] === 'gcash'): ?>
+                                                        <div class="alert alert-warning small mt-3 mb-0" role="alert">
+                                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                                            Customer selected GCash but no payment proof was uploaded.
+                                                        </div>
+                                                    <?php endif; ?>
+
                                                     <?php if (!empty($detailed['history'])): ?>
                                                         <h6 class="mt-4">Status History</h6>
                                                         <ul class="list-group list-group-flush small">
@@ -534,6 +634,142 @@ function paymentStatusBadge(string $s): string {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    /**
+     * Negative-input validator for every <input type="number"> on the page.
+     *
+     * Catches negatives entered via:
+     *   - Typing "-" or "+" or "e" / "E"           (blocked on keydown)
+     *   - Paste / drop                                 (stripped on input)
+     *   - Spinner down arrow past 0                    (clamped on input)
+     *   - Programmatic / devtools value                (re-checked on blur)
+     *
+     * Also blocks form submission if anything negative slips through
+     * (e.g. JS disabled → server still rejects, but the alert helps the user).
+     */
+    (function () {
+        'use strict';
+
+        // Marks numeric inputs that must be >= 0. We mark BOTH the static
+        // (Add Product) form AND the dynamically-generated per-product
+        // Update forms by checking the field name(s) instead of using
+        // a fixed ID list.
+        const NEGATIVE_FIELD_NAMES = new Set(['price', 'quantity']);
+        const NUMBER_INPUT_SELECTOR =
+            'input[type="number"][name="' +
+            Array.from(NEGATIVE_FIELD_NAMES).join('"], input[type="number"][name="') +
+            '"]';
+
+        function markInvalid(input, message) {
+            input.classList.add('is-invalid');
+            input.setCustomValidity(message || 'Value cannot be negative.');
+
+            // Show / refresh the inline feedback. We keep one feedback
+            // element per input to avoid stacking duplicates.
+            let fb = input.parentElement.querySelector('.invalid-feedback.no-neg-fb');
+            if (!fb) {
+                fb = document.createElement('div');
+                fb.className = 'invalid-feedback no-neg-fb';
+                input.insertAdjacentElement('afterend', fb);
+            }
+            fb.textContent = message || 'Value cannot be negative.';
+        }
+
+        function clearInvalid(input) {
+            input.classList.remove('is-invalid');
+            input.setCustomValidity('');
+            const fb = input.parentElement.querySelector('.invalid-feedback.no-neg-fb');
+            if (fb) fb.remove();
+        }
+
+        // Strip any character that would let a negative sneak in.
+        //   "-" / "+"  → sign characters
+        //   "e" / "E"  → exponent (lets users type "1e-5")
+        function sanitizeValue(input) {
+            const original = input.value;
+            // Allow digits, a single "." for decimals, and up to one leading "0."
+            const cleaned = original.replace(/[eE+\-]/g, '');
+            if (cleaned !== original) {
+                input.value = cleaned;
+            }
+        }
+
+        function enforceNonNegative(input) {
+            sanitizeValue(input);
+            if (input.value === '' || input.value === '.' ) {
+                return; // Let "required" / native validation handle emptiness
+            }
+            const num = Number(input.value);
+            if (Number.isNaN(num)) {
+                markInvalid(input, 'Please enter a valid number.');
+                return false;
+            }
+            if (num < 0) {
+                markInvalid(input, 'Value cannot be negative.');
+                return false;
+            }
+            clearInvalid(input);
+            return true;
+        }
+
+        function attach(input) {
+            if (input.dataset.noNegBound === '1') return;
+            input.dataset.noNegBound = '1';
+            // Belt + braces: also force min=0 in case HTML5 attr is missing.
+            input.setAttribute('min', '0');
+
+            input.addEventListener('keydown', function (e) {
+                if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E') {
+                    e.preventDefault();
+                    markInvalid(input, 'Value cannot be negative.');
+                }
+            });
+
+            input.addEventListener('input', function () {
+                // Clear any previous error as soon as the user changes something
+                if (input.classList.contains('is-invalid')) {
+                    clearInvalid(input);
+                }
+                enforceNonNegative(input);
+            });
+
+            input.addEventListener('blur', function () {
+                enforceNonNegative(input);
+            });
+
+            // Re-check on form submit (covers programmatic changes too)
+            const form = input.closest('form');
+            if (form && !form.dataset.noNegBound) {
+                form.dataset.noNegBound = '1';
+                form.addEventListener('submit', function (e) {
+                    let ok = true;
+                    form.querySelectorAll(NUMBER_INPUT_SELECTOR).forEach(function (i) {
+                        if (!enforceNonNegative(i)) {
+                            ok = false;
+                        }
+                    });
+                    if (!ok) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Focus the first invalid field for the user
+                        const firstBad = form.querySelector('.is-invalid');
+                        if (firstBad) firstBad.focus();
+                    }
+                });
+            }
+        }
+
+        function bindAll() {
+            document.querySelectorAll(NUMBER_INPUT_SELECTOR).forEach(attach);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindAll);
+        } else {
+            bindAll();
+        }
+    })();
+    </script>
 </body>
 
 </html>

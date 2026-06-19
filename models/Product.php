@@ -132,6 +132,65 @@ class Product {
         }
         return $products;
     }
+
+    /**
+     * Search products for the admin side.
+     *
+     * - Matches against `name` and `category` (case-insensitive).
+     * - When $category is 'all' or empty, no category filter is applied.
+     * - Uses prepared statements to avoid SQL injection.
+     * - Always orders by most-recent first so newly added products
+     *   show up at the top of the results.
+     *
+     * @param string $term     Free-text search term (matched against name).
+     * @param string $category Category key, or ''/'all' to disable filtering.
+     * @return array           Matching products (possibly empty).
+     */
+    public function search(string $term, string $category = 'all'): array
+    {
+        $term     = trim($term);
+        $category = trim($category);
+        $useCategory = ($category !== '' && $category !== 'all');
+
+        // Build the WHERE clause dynamically but with bound parameters
+        $sql    = "SELECT * FROM {$this->table}";
+        $types  = '';
+        $params = [];
+        $where  = [];
+
+        if ($term !== '') {
+            $where[]  = 'name LIKE ?';
+            $types   .= 's';
+            $params[] = '%' . $term . '%';
+        }
+        if ($useCategory) {
+            $where[]  = 'category = ?';
+            $types   .= 's';
+            $params[] = $category;
+        }
+
+        if (!empty($where)) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        $sql .= ' ORDER BY created_at DESC';
+
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) {
+            return [];
+        }
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $products = [];
+        while ($row = $result->fetch_assoc()) {
+            $products[] = $row;
+        }
+        $stmt->close();
+        return $products;
+    }
     
     // Enhanced uploadImage with resize functionality
     public function uploadImage($file) {

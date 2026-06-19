@@ -109,6 +109,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) && $_POST[
         $error = "First name, last name, and email are required.";
     } elseif ($newPhone !== '' && !preg_match('/^[0-9]+$/', $newPhone)) {
         $error = "Phone number must contain digits only.";
+    } elseif ($newPhone !== '' && (int) $newPhone < 0) {
+        $error = "Phone number cannot be negative.";
     } else {
         $chk = $conn->prepare("SELECT id FROM users WHERE email = ? AND id <> ?");
         $chk->bind_param("si", $newEmail, $user_id);
@@ -168,6 +170,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) && $_POST[
 
     if ($street === '' || $region === '' || $city === '' || $barangay === '' || $postal === '') {
         $error = "Street, region, city, barangay, and postal code are required.";
+    } elseif (!preg_match('/^[0-9]+$/', $postal)) {
+        $error = "Postal code must contain digits only.";
+    } elseif ((int) $postal < 0) {
+        $error = "Postal code cannot be negative.";
     } else {
         $isDefault = empty($addresses) ? 1 : 0;
         $ins = $conn->prepare("INSERT INTO addresses (user_id, address_type, address_label, street_address, region, city, barangay, postal_code, landmark, is_default_shipping) VALUES (?, 'shipping', 'Home', ?, ?, ?, ?, ?, ?, ?)");
@@ -720,7 +726,8 @@ function renderOrdersList(array $orders): string
                                 <div class="row align-items-center mb-3">
                                     <label class="col-4 col-sm-3 text-muted small">Phone:</label>
                                     <div class="col">
-                                        <input type="text" id="profilePhone" name="phone_num"
+                                        <input type="tel" id="profilePhone" name="phone_num" inputmode="numeric" minlength="1"
+                                            pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'')"
                                             class="input-underline form-control form-control-sm"
                                             value="<?= htmlspecialchars($profilePhone) ?>" disabled>
                                     </div>
@@ -829,7 +836,9 @@ function renderOrdersList(array $orders): string
                                     <input name="barangay" class="form-control" placeholder="Barangay" required>
                                 </div>
                                 <div class="col-md-4 mt-2">
-                                    <input name="postal_code" class="form-control" placeholder="Postal code" required>
+                                    <input name="postal_code" type="number" min="0" step="1" inputmode="numeric"
+                                        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                                        class="form-control" placeholder="Postal code" required>
                                 </div>
                                 <div class="col-md-4 mt-2">
                                     <input name="landmark" class="form-control" placeholder="Landmark (optional)">

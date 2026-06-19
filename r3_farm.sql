@@ -82,6 +82,7 @@ CREATE TABLE `orders` (
   `payment_status` enum('unpaid','paid','refunded','failed') DEFAULT 'unpaid',
   `payment_method` varchar(50) DEFAULT 'cash_on_delivery',
   `payment_reference` varchar(100) DEFAULT NULL,
+  `payment_proof` varchar(255) DEFAULT NULL,
   `subtotal` decimal(10,2) NOT NULL,
   `delivery_fee` decimal(10,2) DEFAULT 0.00,
   `tax_amount` decimal(10,2) DEFAULT 0.00,
@@ -398,6 +399,15 @@ ALTER TABLE `order_items`
 ALTER TABLE `order_status_history`
   ADD CONSTRAINT `order_status_history_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `order_status_history_ibfk_2` FOREIGN KEY (`changed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Migrate older databases that pre-date the GCash payment-proof column.
+-- Safe to re-run; MySQL/MariaDB will skip the statement if the column
+-- already exists (the ALTER will fail with a duplicate-column error,
+-- which we swallow via the IF NOT EXISTS guard below).
+--
+ALTER TABLE `orders`
+  ADD COLUMN IF NOT EXISTS `payment_proof` VARCHAR(255) DEFAULT NULL AFTER `payment_reference`;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

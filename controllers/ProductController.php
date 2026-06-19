@@ -26,7 +26,15 @@ class ProductController {
     }
     
     public function adminIndex() {
-        return $this->product->getAll();
+        // If the admin used the product search form, filter the list.
+        // Otherwise fall back to the unfiltered getAll().
+        $term     = trim((string) ($_GET['product_search'] ?? ''));
+        $category = trim((string) ($_GET['product_category'] ?? 'all'));
+
+        if ($term === '' && $category === '') {
+            return $this->product->getAll();
+        }
+        return $this->product->search($term, $category);
     }
     
     public function create() {

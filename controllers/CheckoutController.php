@@ -149,11 +149,28 @@ class CheckoutController
             $shippingFee = 0;
         }
 
+        $paymentMethod = $_POST['payMethod'] ?? 'cod';
+
+        // ── 3b. Handle GCash payment proof upload ───────────────────────
+        // For GCash, the customer must attach a screenshot/receipt of
+        // their transfer. We validate the file (type + size) and store it
+        // under /uploads/payment_proofs/ so the admin can review it
+        // before marking the order as paid.
+        $paymentProofPath = null;
+        if ($paymentMethod === 'gcash') {
+            $uploadResult = $this->handleGcashProofUpload();
+            if (!$uploadResult['success']) {
+                return ['success' => false, 'error' => $uploadResult['error']];
+            }
+            $paymentProofPath = $uploadResult['path'];
+        }
+
         $payment = [
-            'method'       => $_POST['payMethod'] ?? 'cod',
-            'shipping_fee' => $shippingFee,
-            'discount'     => $discount,
-            'notes'        => trim($_POST['notes'] ?? ''),
+            'method'        => $paymentMethod,
+            'shipping_fee'  => $shippingFee,
+            'discount'      => $discount,
+            'notes'         => trim($_POST['notes'] ?? ''),
+            'payment_proof' => $paymentProofPath,
         ];
 
         // ── 4. Persist ───────────────────────────────────────────────────
@@ -203,6 +220,88 @@ class CheckoutController
     }
 
     /* ── Auth helpers ───────────────────────────────────────────────── */
+
+    /**
+     * Validate and store an uploaded GCash payment-proof image.
+     *
+     * Rules:
+     *   - File MUST be present (else returns an error explaining why).
+     *   - Max size: 5 MB.
+     *   - MIME type must be one of: image/png, image/jpeg, image/webp,
+     *     image/gif (re-checked server-side; the client-side accept
+     *     attribute is only a hint).
+     *   - File is renamed to a timestamp + random hex to avoid collisions
+     *     and to prevent path traversal (we strip the original filename).
+     *   - Stored under /uploads/payment_proofs/ which is auto-created.
+     *
+     * @return array { success:bool, path?:string, error?:string }
+     */
+    private function handleGcashProofUpload(): array
+    {
+        if (!isset($_FILES['payment_proof']) || (int)($_FILES['payment_proof']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return ['success' => false, 'error' => 'Please attach a screenshot of your GCash payment before placing the order.'];
+        }
+
+        $file = $_FILES['payment_proof'];
+
+        if ((int)$file['error'] !== UPLOAD_ERR_OK) {
+            $phpErrors = [
+                UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the server limit.',
+                UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the form limit.',
+                UPLOAD_ERR_PARTIAL    => 'The upload was interrupted; please try again.',
+                UPLOAD_ERR_NO_TMP_DIR => 'Server is missing a temporary folder.',
+                UPLOAD_ERR_CANT_WRITE => 'Server failed to write the uploaded file.',
+                UPLOAD_ERR_EXTENSION  => 'A PHP extension blocked the upload.',
+            ];
+            $msg = $phpErrors[$file['error']] ?? 'Upload failed (code ' . (int)$file['error'] . ').';
+            return ['success' => false, 'error' => $msg];
+        }
+
+        $maxBytes = 5 * 1024 * 1024; // 5 MB
+        if ((int)$file['size'] > $maxBytes) {
+            return ['success' => false, 'error' => 'Payment proof is too large. Maximum size is 5 MB.'];
+        }
+
+        $allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = $finfo ? finfo_file($finfo, $file['tmp_name']) : ($file['type'] ?? '');
+        if ($finfo) {
+            finfo_close($finfo);
+        }
+        if (!in_array($mime, $allowed, true)) {
+            return ['success' => false, 'error' => 'Payment proof must be a PNG, JPG, WEBP, or GIF image.'];
+        }
+
+        // Build a destination folder next to /uploads.
+        $projectRoot = realpath(__DIR__ . '/..');
+        if ($projectRoot === false) {
+            return ['success' => false, 'error' => 'Could not resolve project root.'];
+        }
+        $destDir = $projectRoot . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'payment_proofs';
+        if (!is_dir($destDir) && !mkdir($destDir, 0755, true) && !is_dir($destDir)) {
+            return ['success' => false, 'error' => 'Could not create the upload directory on the server.'];
+        }
+
+        $extMap = [
+            'image/png'  => 'png',
+            'image/jpeg' => 'jpg',
+            'image/webp' => 'webp',
+            'image/gif'  => 'gif',
+        ];
+        $ext = $extMap[$mime] ?? 'bin';
+        $safeName = 'gcash_' . date('Ymd_His') . '_' . bin2hex(random_bytes(6)) . '.' . $ext;
+        $destPath = $destDir . DIRECTORY_SEPARATOR . $safeName;
+
+        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+            return ['success' => false, 'error' => 'Could not save the uploaded file. Please try again.'];
+        }
+
+        // Return a web-relative path that the admin and order pages can use.
+        return [
+            'success' => true,
+            'path'    => 'uploads/payment_proofs/' . $safeName,
+        ];
+    }
 
     public function isLoggedIn(): bool
     {
