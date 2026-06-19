@@ -210,7 +210,7 @@ SQL;
 
             $updUser = $this->conn->prepare("UPDATE users SET first_name = ?, last_name = ?, phone_num = ? WHERE id = ?");
             if ($updUser) {
-                $updUser->bind_param("sssi", $firstName, $lastName, $phoneDigits, $userId);
+                $updUser->bind_param("ssss", $firstName, $lastName, $phoneDigits, $userId);
                 $updUser->execute();
                 $updUser->close();
 

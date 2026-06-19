@@ -564,6 +564,17 @@ $stmt->close();
   </div>
 
   <script>
+     /* ─── LIVE PHONE VALIDATION ─── */
+    const phoneInput = document.getElementById('phoneInput');
+    const phoneRegex = /^(?:\+63|0)9\d{9}$/;
+    const zipRegex   = /^\d{4}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    /* ── Validation helpers ── */
+    const form         = document.getElementById('checkoutForm');
+    const errorBanner  = document.getElementById('formErrorBanner');
+    const errorBannerText = document.getElementById('formErrorBannerText');
+    const placeBtn     = document.getElementById('placeOrderBtn');
     /* ─── State ─── */
     const prices = <?= json_encode(array_column($items, 'price', 'id')) ?>;
     const stocks = <?= json_encode(array_column($items, 'stock', 'id')) ?>;
@@ -1130,22 +1141,8 @@ $stmt->close();
       populateCities(); // initial state
     }
 
-    if (provinceSelectEl) {
-      provinceSelectEl.addEventListener('change', populateCities);
-      populateCities(); // initial state
-    }
 
-    /* ─── LIVE PHONE VALIDATION ─── */
-    const phoneInput = document.getElementById('phoneInput');
-    const phoneRegex = /^(?:\+63|0)9\d{9}$/;
-    const zipRegex   = /^\d{4}$/;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    /* ── Validation helpers ── */
-    const form         = document.getElementById('checkoutForm');
-    const errorBanner  = document.getElementById('formErrorBanner');
-    const errorBannerText = document.getElementById('formErrorBannerText');
-    const placeBtn     = document.getElementById('placeOrderBtn');
+   
 
     // Returns the first currently visible element with [data-field="X"]
     function fieldEl(name) {

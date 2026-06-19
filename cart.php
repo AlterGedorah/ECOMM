@@ -102,6 +102,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 
 <head>
     <title>Your Cart - Fresh Harvest</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles/cart.css">
     <link href="styles/cookie.css" rel="stylesheet">
@@ -133,9 +134,10 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 <body class="Background">
     <div class="container mt-5 pt-1">
         <?php include('components/navbar.comp.php') ?>
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Shopping Cart</h2>
-            <a href="index.php" class="btn btn-outline-success">← Continue Shopping</a>
+        
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mb-4 text-center text-sm-start">
+            <h2 class="mb-0">Shopping Cart</h2>
+            <a href="index.php" class="btn btn-outline-success w-100 w-sm-auto">← Continue Shopping</a>
         </div>
 
         <?php if (isset($_SESSION['success'])): ?>
@@ -162,31 +164,32 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
             </div>
         <?php else: ?>
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-lg-8 col-md-12 mb-4">
                     <?php foreach ($cart_data as $item): ?>
                         <div class="card mb-3 shadow-sm border-0">
                             <div class="row g-0">
-                                <div class="col-md-3">
-                                    <img src="<?= $item['image'] ?>" class="img-fluid rounded-start"
-                                        style="height: 150px; object-fit: cover; width: 100%;">
+                                <div class="col-12 col-md-4 col-lg-3">
+                                    <img src="<?= $item['image'] ?>" class="img-fluid rounded-top rounded-md-start w-100"
+                                        style="height: 150px; object-fit: cover;">
                                 </div>
-                                <div class="col-md-9">
+                                <div class="col-12 col-md-8 col-lg-9">
                                     <div class="card-body">
-                                        <div class="d-flex justify-content-between">
-                                            <h5 class="card-title text-success"><?= htmlspecialchars($item['name']) ?></h5>
-                                            <p class="card-text fw-bold">₱<?= number_format($item['price'], 2) ?></p>
+                                        <div class="d-flex flex-column flex-sm-row justify-content-between">
+                                            <h5 class="card-title text-success mb-1"><?= htmlspecialchars($item['name']) ?></h5>
+                                            <p class="card-text fw-bold mb-0">₱<?= number_format($item['price'], 2) ?></p>
                                         </div>
 
                                         <?php if ($item['stock_status'] == 'insufficient'): ?>
-                                            <div class="text-danger small mb-2">
+                                            <div class="text-danger small mt-1 mb-2">
                                                  Only <?= $item['stock'] ?> items available in stock! (You have <?= $item['quantity'] ?>)
                                             </div>
                                         <?php endif; ?>
 
-                                        <div class="d-flex align-items-center mt-3">
-                                            <form method="POST" class="me-3 d-flex align-items-center mb-0">
+                                        <div class="d-flex flex-wrap align-items-center mt-3 gap-2">
+                                            <form method="POST" class="d-flex align-items-center mb-0">
                                                 <input type="hidden" name="product_id" value="<?= $item['id'] ?>">
-                                                <input type="hidden" name="update_cart" value="1"> <div class="input-group input-group-sm" style="width: 110px;">
+                                                <input type="hidden" name="update_cart" value="1"> 
+                                                <div class="input-group input-group-sm" style="width: 110px;">
                                                     <button class="btn qty-btn btn-minus" type="button">&minus;</button>
                                                     <input type="number" name="quantity" value="<?= $item['quantity'] ?>" min="1" max="<?= $item['stock'] ?>" class="form-control text-center qty-input">
                                                     <button class="btn qty-btn btn-plus" type="button">&plus;</button>
@@ -206,8 +209,8 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
                     <?php endforeach; ?>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="card shadow-sm border-0">
+                <div class="col-lg-4 col-md-12">
+                    <div class="card shadow-sm border-0 position-sticky" style="top: 100px;">
                         <div class="card-header text-white" style="background-color: #2f4a3a;">
                             <h5 class="mb-0">Order Summary</h5>
                         </div>
